@@ -1,0 +1,2 @@
+# Após aprovação no AdSense, substitua pelo seu ID e remova o "#":
+# google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0

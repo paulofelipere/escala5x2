@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Planejador gratuito de escala 5x2 com auditoria em tempo real da EC 141/2026 e da CLT: grade semanal, turnos, salário-hora (divisores 220/210/200) e exportação para Excel.">
+  <meta name="robots" content="index,follow">
+  <script>
+    /* Preencha após a aprovação no AdSense. Com client vazio, nenhum anúncio é carregado e os espaços ficam ocultos. */
+    window.SITE_CONFIG = {
+      adsenseClient: "",  // ex.: "ca-pub-1234567890123456"
+      slots: { TOPO: "", CENTRO: "", RODAPE: "", LATERAL_ESQ: "", LATERAL_DIR: "" }
+    };
+  </script>
+  <title>Planejador de Jornadas 5x2 (EC 141/2026 &amp; CLT) | Escala 5x2 Brasil</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    .ad-container { display: none; }
+    body.ads-on .ad-container:not(aside) { display: block; }
+    @media (min-width: 1280px) { body.ads-on aside.ad-container { display: block; } }
+    .site-footer a:hover { color: #047857; }
+    body {
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .tab-btn[aria-selected="true"] {
+      background-color: #0f172a;
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
+    }
+    .cell-btn {
+      transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+    }
+    .cell-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+    }
+    .toast-enter {
+      animation: slideUp 0.22s ease-out forwards;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #ffffff; }
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased">
+  <!-- Top Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-wrap items-center justify-between gap-3 py-3.5">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-sm shrink-0">
+            <i data-lucide="calendar-check-2" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <a href="index.html" class="text-base sm:text-lg font-bold tracking-tight text-slate-900"><h1 class="inline">Escala 5x2 Brasil</h1></a>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">EC nº 141/2026 &amp; CLT</span>
+            </div>
+            <p class="text-xs text-slate-500 hidden sm:block">Planejador de escalas trabalhistas com auditoria legal em tempo real</p>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl overflow-x-auto max-w-full" role="tablist" aria-label="Navegação principal">
+          <button type="button" role="tab" aria-selected="true" data-tab="escala" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 whitespace-nowrap flex items-center gap-1.5 transition">
+            <i data-lucide="layout-grid" class="w-4 h-4"></i>
+            <span>Montar Escala</span>
+          </button>
+          <button type="button" role="tab" aria-selected="false" data-tab="turnos" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 whitespace-nowrap flex items-center gap-1.5 transition">
+            <i data-lucide="clock" class="w-4 h-4"></i>
+            <span>Turnos</span>
+          </button>
+          <button type="button" role="tab" aria-selected="false" data-tab="simulador" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 whitespace-nowrap flex items-center gap-1.5 transition">
+            <i data-lucide="calculator" class="w-4 h-4"></i>
+            <span>Custos &amp; PICEA</span>
+          </button>
+          <button type="button" role="tab" aria-selected="false" data-tab="guia" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 whitespace-nowrap flex items-center gap-1.5 transition">
+            <i data-lucide="scale" class="w-4 h-4"></i>
+            <span>Guia Legal</span>
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="bg-white border-b border-slate-200 no-print">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap gap-x-5 gap-y-1 text-xs" aria-label="Páginas do site"><a href="index.html" class="text-emerald-700 font-semibold whitespace-nowrap" aria-current="page">Planejador</a><a href="guia-ec-141-escala-5x2.html" class="text-slate-600 hover:text-slate-900 whitespace-nowrap">Guia da EC 141</a><a href="sobre.html" class="text-slate-600 hover:text-slate-900 whitespace-nowrap">Sobre e contato</a><a href="privacidade.html" class="text-slate-600 hover:text-slate-900 whitespace-nowrap">Privacidade</a><a href="termos.html" class="text-slate-600 hover:text-slate-900 whitespace-nowrap">Termos de Uso</a></nav>
+  </div>
+
+  <!-- Google AdSense: Banner Topo (728x90 / Responsivo) -->
+  <div class="max-w-[1640px] mx-auto px-4 pt-4 no-print ad-container" aria-label="Espaço publicitário superior">
+    <div class="max-w-[728px] mx-auto min-h-[90px] rounded-xl  flex flex-col items-center justify-center p-2 text-center relative overflow-hidden">
+      <ins class="adsbygoogle"
+           style="display:block;width:100%;"
+           data-ad-client=""
+           data-ad-key="TOPO"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+    </div>
+  </div>
+
+  <!-- Layout 3 colunas: Lateral Esquerda AdSense + Conteúdo Principal + Lateral Direita AdSense -->
+  <div class="max-w-[1640px] mx-auto px-4 py-5 flex items-start justify-center gap-5">
+    <!-- Google AdSense: Lateral Esquerda (160x600 Sticky) -->
+    <aside aria-label="Espaço publicitário lateral esquerdo" class="hidden xl:block w-[160px] shrink-0 sticky top-20 no-print ad-container">
+      <div class="min-h-[600px] rounded-xl  flex flex-col items-center justify-center p-3 text-center">
+        <ins class="adsbygoogle"
+             style="display:block;width:160px;height:600px;"
+             data-ad-client=""
+             data-ad-key="LATERAL_ESQ"></ins>
+      </div>
+    </aside>
+
+    <main class="flex-1 min-w-0 max-w-7xl space-y-6">
+    <!-- ==================== TAB 1: MONTAR ESCALA ==================== -->
+    <section id="panel-escala" class="space-y-6">
+      <!-- Legal & Shift Configuration Bar -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 no-print">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div class="flex items-center gap-2">
+            <i data-lucide="sliders-horizontal" class="w-4 h-4 text-emerald-600"></i>
+            <h2 class="text-sm font-semibold text-slate-900">Parâmetros da Jornada e Cenário Legal</h2>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" id="btn-auto-generate" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-sm">
+              <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+              <span>Gerar Escala Automática</span>
+            </button>
+            <button type="button" id="btn-add-emp" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 transition shadow-sm">
+              <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+              <span>Novo Funcionário</span>
+            </button>
+            <button type="button" id="btn-export-xlsx" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition">
+              <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span>Exportar Excel (.xlsx)</span>
+            </button>
+            <button type="button" id="btn-copy-summary" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span>Copiar Resumo</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Phase selector -->
+          <div>
+            <label for="cfg-phase" class="block text-xs font-medium text-slate-600 mb-1">Fase / Regime Legal</label>
+            <select id="cfg-phase" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="fase1_42h">EC 141 — Fase 1 Transição (42h/sem · dez/2026)</option>
+              <option value="fase2_40h">EC 141 — Fase 2 Definitiva (40h/sem · dez/2027)</option>
+              <option value="compensatorio">EC 141 — Regime Compensatório (40h · §2º)</option>
+              <option value="picea_4x3">PL 4478/2024 — Simulação 4x3 (36h/sem)</option>
+            </select>
+          </div>
+
+          <!-- Operation days -->
+          <div>
+            <label for="cfg-operation" class="block text-xs font-medium text-slate-600 mb-1">Funcionamento da Empresa</label>
+            <select id="cfg-operation" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="seg_sex">Segunda a Sexta (5 dias)</option>
+              <option value="seg_sab">Segunda a Sábado (6 dias)</option>
+              <option value="todos_dias">Todos os dias — Seg a Dom (7 dias)</option>
+            </select>
+          </div>
+
+          <!-- Minimum daily coverage -->
+          <div>
+            <label for="cfg-coverage" class="block text-xs font-medium text-slate-600 mb-1">
+              Cobertura Mínima / Dia: <span id="cfg-coverage-label" class="font-bold text-emerald-700">4</span> pessoas
+            </label>
+            <input id="cfg-coverage" type="range" min="1" max="10" value="4" class="w-full accent-emerald-600 mt-2 cursor-pointer">
+          </div>
+
+          <!-- ACT/CCT toggle -->
+          <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+            <div class="pr-2">
+              <div class="text-xs font-semibold text-slate-800">Acordo / CCT Ativo</div>
+              <div class="text-[11px] text-slate-500 leading-tight">Permite 8h24/dia na fase 42h (Art. 7º) e pausa 30m (Art. 611-A)</div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+              <input type="checkbox" id="cfg-cct" class="sr-only peer" checked>
+              <div class="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Contextual Legal Banner -->
+        <div id="legal-phase-banner" class="mt-4 rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-2.5 text-xs text-emerald-900 flex items-start gap-2.5">
+          <i data-lucide="info" class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"></i>
+          <div id="legal-phase-text"></div>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-500">Equipe na Escala</span>
+            <i data-lucide="users" class="w-4 h-4 text-slate-400"></i>
+          </div>
+          <div id="kpi-team" class="mt-2 text-2xl font-bold text-slate-900">0</div>
+          <div id="kpi-team-sub" class="mt-0.5 text-xs text-slate-500">colaboradores ativos</div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-500">Conformidade Legal</span>
+            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
+          </div>
+          <div id="kpi-compliance" class="mt-2 text-2xl font-bold text-emerald-600">100%</div>
+          <div id="kpi-compliance-sub" class="mt-0.5 text-xs text-slate-500">sem infrações críticas</div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-500">Horas Extras / Sem</span>
+            <i data-lucide="clock-alert" class="w-4 h-4 text-amber-500"></i>
+          </div>
+          <div id="kpi-overtime" class="mt-2 text-2xl font-bold text-slate-900">0h</div>
+          <div id="kpi-overtime-sub" class="mt-0.5 text-xs text-slate-500">limite máx. 2h/dia (CLT Art. 59)</div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-500">Cobertura Operacional</span>
+            <i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-500"></i>
+          </div>
+          <div id="kpi-coverage" class="mt-2 text-2xl font-bold text-slate-900">0/0</div>
+          <div id="kpi-coverage-sub" class="mt-0.5 text-xs text-slate-500">dias atingindo a meta</div>
+        </div>
+      </div>
+
+      <!-- Interactive Weekly Schedule Grid -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-sm font-semibold text-slate-900">Grade Semanal da Equipe</h3>
+            <p class="text-xs text-slate-500">Clique em qualquer célula para trocar o turno ou definir folga (DSR).</p>
+          </div>
+          <div id="shift-legend" class="flex flex-wrap items-center gap-1.5 text-[11px]"></div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-[780px]">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
+                <th class="py-3 px-4 w-52">Funcionário</th>
+                <th class="py-3 px-2 text-center">Seg</th>
+                <th class="py-3 px-2 text-center">Ter</th>
+                <th class="py-3 px-2 text-center">Qua</th>
+                <th class="py-3 px-2 text-center">Qui</th>
+                <th class="py-3 px-2 text-center">Sex</th>
+                <th class="py-3 px-2 text-center">Sáb</th>
+                <th class="py-3 px-2 text-center text-indigo-700">Dom</th>
+                <th class="py-3 px-3 text-center">Carga / DSR</th>
+                <th class="py-3 px-3 text-center">Auditoria</th>
+              </tr>
+            </thead>
+            <tbody id="schedule-tbody" class="divide-y divide-slate-100 text-xs"></tbody>
+            <tfoot id="schedule-tfoot" class="bg-slate-50 border-t border-slate-200 text-xs font-semibold"></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Google AdSense: Banner Centro (728x90 / Responsivo) -->
+      <div class="no-print ad-container" aria-label="Espaço publicitário central">
+        <div class="max-w-[728px] mx-auto min-h-[90px] rounded-xl  flex flex-col items-center justify-center p-2 text-center relative overflow-hidden">
+          <ins class="adsbygoogle"
+               style="display:block;width:100%;"
+               data-ad-client=""
+               data-ad-key="CENTRO"
+               data-ad-format="auto"
+               data-full-width-responsive="true"></ins>
+        </div>
+      </div>
+
+      <!-- Bottom Grid: Coverage Chart & Legal Audit Panel -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Coverage Chart -->
+        <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-sm font-semibold text-slate-900">Cobertura Diária vs. Meta</h3>
+              <p class="text-xs text-slate-500">Funcionários escalados por dia da semana</p>
+            </div>
+            <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700" id="chart-meta-badge">Meta: 4/dia</span>
+          </div>
+          <div class="relative h-64">
+            <canvas id="coverageChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Detailed Audit Alerts -->
+        <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-sm font-semibold text-slate-900">Auditoria Trabalhista em Tempo Real</h3>
+              <p class="text-xs text-slate-500">Verificação automática de EC 141/2026 e CLT</p>
+            </div>
+            <span id="audit-count-badge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700">Tudo certo</span>
+          </div>
+          <div id="audit-alerts-list" class="space-y-2.5 overflow-y-auto max-h-64 pr-1"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: TURNOS E JORNADAS ==================== -->
+    <section id="panel-turnos" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Shift Creator / Editor Form -->
+        <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h2 id="shift-form-title" class="text-base font-bold text-slate-900">Criar / Editar Turno</h2>
+            <button type="button" id="btn-reset-shift-form" class="text-xs font-medium text-slate-500 hover:text-slate-800">Limpar</button>
+          </div>
+
+          <form id="shift-form" class="space-y-4">
+            <input type="hidden" id="sf-id" value="">
+            <div class="grid grid-cols-3 gap-3">
+              <div class="col-span-2">
+                <label for="sf-name" class="block text-xs font-medium text-slate-600 mb-1">Nome do Turno</label>
+                <input id="sf-name" type="text" required placeholder="Ex.: Comercial 8h" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              </div>
+              <div>
+                <label for="sf-code" class="block text-xs font-medium text-slate-600 mb-1">Sigla</label>
+                <input id="sf-code" type="text" required maxlength="6" placeholder="COM8" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label for="sf-start" class="block text-xs font-medium text-slate-600 mb-1">Entrada</label>
+                <input id="sf-start" type="time" required value="08:00" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              </div>
+              <div>
+                <label for="sf-end" class="block text-xs font-medium text-slate-600 mb-1">Saída</label>
+                <input id="sf-end" type="time" required value="17:00" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              </div>
+              <div>
+                <label for="sf-break" class="block text-xs font-medium text-slate-600 mb-1">Intervalo (min)</label>
+                <input id="sf-break" type="number" min="0" max="180" step="5" required value="60" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              </div>
+            </div>
+
+            <div>
+              <label for="sf-color" class="block text-xs font-medium text-slate-600 mb-1">Cor na Grade</label>
+              <select id="sf-color" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <option value="emerald">Verde Esmeralda</option>
+                <option value="sky">Azul Celeste</option>
+                <option value="indigo">Índigo</option>
+                <option value="amber">Âmbar</option>
+                <option value="violet">Violeta</option>
+                <option value="rose">Rosa</option>
+              </select>
+            </div>
+
+            <!-- Live Calculation Preview -->
+            <div id="sf-preview" class="rounded-xl bg-slate-50 border border-slate-200 p-3.5 space-y-1.5 text-xs"></div>
+
+            <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition shadow-sm">
+              Salvar Turno
+            </button>
+          </form>
+        </div>
+
+        <!-- Existing Shifts List -->
+        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-base font-bold text-slate-900">Turnos Configurados</h2>
+              <p class="text-xs text-slate-500">Personalize horários para ajustar a carga diária e intrajornada.</p>
+            </div>
+          </div>
+          <div id="shifts-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: SIMULADOR CUSTOS & PICEA ==================== -->
+    <section id="panel-simulador" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Irredutibilidade Salarial Calculator (Art. 2º EC 141/2026) -->
+        <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+          <div class="flex items-center gap-2">
+            <span class="p-2 rounded-lg bg-emerald-50 text-emerald-700"><i data-lucide="banknote" class="w-4 h-4"></i></span>
+            <div>
+              <h2 class="text-sm font-bold text-slate-900">Irredutibilidade Salarial (Art. 2º EC 141/2026)</h2>
+              <p class="text-xs text-slate-500">Impacto da redução de jornada no valor da hora normal</p>
+            </div>
+          </div>
+
+          <div>
+            <label for="sim-salary" class="block text-xs font-medium text-slate-600 mb-1">Salário Mensal Nominal (R$)</label>
+            <input id="sim-salary" type="number" min="1000" step="100" value="3000" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+
+          <div class="space-y-2.5" id="sim-hourly-cards"></div>
+
+          <p class="text-[11px] text-slate-500 leading-relaxed">
+            Pelo Art. 2º da EC nº 141/2026, a diminuição da jornada (44h → 42h → 40h) e o incremento do DSR para 2 dias aplicam-se aos contratos em vigor <strong>sem qualquer redução salarial</strong>, inclusive aos pisos salariais.
+          </p>
+        </div>
+
+        <!-- PICEA Simulator (PL 4478/2024) -->
+        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+          <div class="flex flex-wrap items-start justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="p-2 rounded-lg bg-indigo-50 text-indigo-700"><i data-lucide="trending-down" class="w-4 h-4"></i></span>
+              <div>
+                <h2 class="text-sm font-bold text-slate-900">Simulador de Encargos — PICEA (PL nº 4478/2024)</h2>
+                <p class="text-xs text-slate-500">Projeção baseada na folha da equipe cadastrada na grade</p>
+              </div>
+            </div>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">Projeto de Lei (Simulação)</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label for="sim-inss" class="block text-xs font-medium text-slate-600 mb-1">INSS Patronal (%)</label>
+              <input id="sim-inss" type="number" min="0" max="30" step="0.5" value="20" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label for="sim-fgts" class="block text-xs font-medium text-slate-600 mb-1">FGTS Padrão (%)</label>
+              <input id="sim-fgts" type="number" value="8" disabled class="w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500">
+            </div>
+            <div>
+              <label for="sim-rat" class="block text-xs font-medium text-slate-600 mb-1">RAT / Seguro Acidente (%)</label>
+              <input id="sim-rat" type="number" min="0" max="6" step="0.5" value="2" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="picea-summary-cards"></div>
+
+          <div class="relative h-60">
+            <canvas id="piceaChart"></canvas>
+          </div>
+
+          <div class="text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded-xl p-3 leading-relaxed">
+            <strong>Base da simulação (Art. 3º do PL nº 4478/2024):</strong> Redução de <strong>25%</strong> em INSS patronal, RAT e FGTS (8% → 6%) para contratos em escala 5x2 (máx. 40h); e redução de <strong>40%</strong> (FGTS 8% → 4,8%) para escala 4x3 (máx. 36h), condicionada ao cumprimento da CLT e inclusão em plano de benefícios de saúde/assistência social (Art. 4º). <em>Nota: Trata-se de Projeto de Lei em tramitação, distinto da EC nº 141/2026 já promulgada.</em>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: GUIA LEGAL ==================== -->
+    <section id="panel-guia" class="hidden space-y-6">
+      <!-- Timeline EC 141/2026 -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+        <div class="flex items-center gap-2 mb-5">
+          <i data-lucide="calendar-clock" class="w-5 h-5 text-emerald-600"></i>
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Cronograma de Vigência — Emenda Constitucional nº 141/2026</h2>
+            <p class="text-xs text-slate-500">Promulgada e publicada em 16 de outubro de 2026 (DOU — Edição Extra)</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div class="text-xs font-bold uppercase tracking-wider text-slate-500">16 de Outubro de 2026</div>
+            <div class="mt-1 text-sm font-bold text-slate-900">Publicação da EC nº 141/2026</div>
+            <p class="mt-1.5 text-xs text-slate-600 leading-relaxed">Vigência imediata dos dispositivos gerais (Art. 10, II), irredutibilidade salarial (Art. 2º) e início do prazo de adaptação de 2 meses para cláusulas coletivas.</p>
+          </div>
+          <div class="rounded-xl border border-emerald-300 bg-emerald-50 p-4">
+            <div class="text-xs font-bold uppercase tracking-wider text-emerald-700">16 de Dezembro de 2026 (Fase 1)</div>
+            <div class="mt-1 text-sm font-bold text-emerald-950">Limite de 42h/sem + 2 Dias de DSR</div>
+            <p class="mt-1.5 text-xs text-emerald-900 leading-relaxed">Passa a valer o repouso semanal remunerado de 2 dias (1 preferencialmente domingo) e teto semanal de 42h (Art. 6º, I e Art. 10, I). ACT/CCT podem ampliar a jornada diária para distribuir as 42h (Art. 7º).</p>
+          </div>
+          <div class="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+            <div class="text-xs font-bold uppercase tracking-wider text-indigo-700">16 de Dezembro de 2027 (Fase 2)</div>
+            <div class="mt-1 text-sm font-bold text-indigo-950">Limite Definitivo de 40h/sem</div>
+            <p class="mt-1.5 text-xs text-indigo-900 leading-relaxed">Um ano após a Fase 1, a duração do trabalho normal não excederá 8h diárias e 40h semanais (Art. 6º, II e Art. 7º, XIII da CF), mantidos os 2 dias de DSR sem redução salarial.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-amber-200 shadow-sm p-5 sm:p-6">
+        <div class="flex items-center gap-2 mb-3">
+          <i data-lucide="scroll-text" class="w-5 h-5 text-amber-600"></i>
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Decreto nº 13.173/2026 — Regulamentação da EC 141</h2>
+            <p class="text-xs text-slate-500">Publicado em 19 de novembro de 2026 (DOU — Edição Extra)</p>
+          </div>
+        </div>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><strong class="text-slate-900">Salário-hora:</strong> divisor 210 para 42h e divisor 200 para 40h (antes, 220). Exemplo oficial: R$ 3.000 passa de R$ 13,64/h para R$ 14,29/h e depois R$ 15,00/h.</li>
+          <li><strong class="text-slate-900">Regimes especiais:</strong> turnos ininterruptos de revezamento mantêm 6h diárias, salvo ACT/CCT; na 12x36, média mensal acima do limite exige compensação ou horas extras.</li>
+          <li><strong class="text-slate-900">Exclusão:</strong> não vale para empregados públicos da administração direta e indireta.</li>
+          <li><strong class="text-slate-900">Próximos passos:</strong> o MTE vai editar portarias complementares. Consulte-as antes de aplicar regimes especiais.</li>
+        </ul>
+      </div>
+
+      <!-- Legal Reference Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="book-open-check" class="w-4 h-4 text-emerald-600"></i>
+            <span>Regras da EC nº 141/2026 (Constituição Federal)</span>
+          </h3>
+          <ul class="space-y-2.5 text-xs text-slate-600">
+            <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">Art. 7º, XIII:</span><span>Duração normal máxima de 8h diárias e 40h semanais (42h na transição), facultada compensação via ACT/CCT.</span></li>
+            <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">Art. 7º, XV:</span><span>Repouso semanal remunerado (DSR) de 2 dias, um dos quais preferencialmente aos domingos.</span></li>
+            <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">Art. 7º, § 2º:</span><span>ACT/CCT podem prever regime compensatório com média de 2 dias de DSR no mês-calendário, garantido mínimo de 1 dia dentro de cada semana.</span></li>
+            <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">Art. 2º:</span><span>Irredutibilidade salarial absoluta (nominal, proporcional ou de pisos) na migração dos contratos vigentes.</span></li>
+            <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">Art. 4º:</span><span>Jornadas já iguais ou inferiores a 40h não sofrem redução proporcional, mas mantêm o direito aos 2 dias de DSR.</span></li>
+            <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">Art. 8º:</span><span>Empregado com nível superior e salário ≥ 2,5x teto do RGPS fica dispensado do controle de jornada (salvo liberalidade ou ACT/CCT), preservados os 2 dias de DSR. Não se aplica a empregados públicos da administração direta e indireta (§ 1º).</span></li>
+            <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">Art. 3º:</span><span>Após 2 meses da publicação, perdem efeito as cláusulas de ACT/CCT sobre jornada e repouso incompatíveis com a Emenda.</span></li>
+          </ul>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="file-text" class="w-4 h-4 text-indigo-600"></i>
+            <span>Regras Complementares da CLT &amp; PL 4478/2024</span>
+          </h3>
+          <ul class="space-y-2.5 text-xs text-slate-600">
+            <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">CLT Art. 59:</span><span>Limite máximo de 2 horas extras por dia de trabalho (acréscimo mínimo de 50%).</span></li>
+            <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">CLT Art. 66:</span><span>Intervalo interjornada mínimo obrigatório de 11 horas consecutivas entre duas jornadas de trabalho.</span></li>
+            <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">CLT Art. 71:</span><span>Intervalo intrajornada: até 4h (0 min); &gt;4h até 6h (15 min); acima de 6h (1h a 2h, redutível até 30 min por ACT/CCT — Art. 611-A).</span></li>
+            <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">CLT Art. 73:</span><span>Trabalho noturno urbano (22h às 5h): adicional mínimo de 20% e hora ficta reduzida de 52 minutos e 30 segundos.</span></li>
+            <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">PL 4478/2024:</span><span>Proposta legislativa (PICEA) que prevê redução de 25% nos encargos (INSS patronal, FGTS 6%, RAT) para escala 5x2 (40h) e 40% (FGTS 4,8%) para escala 4x3 (36h).</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+      <!-- Google AdSense: Banner Rodapé / Abaixo (728x90 / Responsivo) -->
+      <div class="pt-2 no-print ad-container" aria-label="Espaço publicitário inferior">
+        <div class="max-w-[728px] mx-auto min-h-[90px] rounded-xl  flex flex-col items-center justify-center p-2 text-center relative overflow-hidden">
+          <ins class="adsbygoogle"
+               style="display:block;width:100%;"
+               data-ad-client=""
+               data-ad-key="RODAPE"
+               data-ad-format="auto"
+               data-full-width-responsive="true"></ins>
+        </div>
+      </div>
+    </main>
+
+    <!-- Google AdSense: Lateral Direita (160x600 Sticky) -->
+    <aside aria-label="Espaço publicitário lateral direito" class="hidden xl:block w-[160px] shrink-0 sticky top-20 no-print ad-container">
+      <div class="min-h-[600px] rounded-xl  flex flex-col items-center justify-center p-3 text-center">
+        <ins class="adsbygoogle"
+             style="display:block;width:160px;height:600px;"
+             data-ad-client=""
+             data-ad-key="LATERAL_DIR"></ins>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="site-footer no-print border-t border-slate-200 bg-white mt-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-xs text-slate-500 space-y-3">
+      <nav class="flex flex-wrap gap-x-5 gap-y-1" aria-label="Rodapé"><a href="index.html" class="text-emerald-700 font-semibold whitespace-nowrap" aria-current="page">Planejador</a><a href="guia-ec-141-escala-5x2.html" class="text-slate-600 hover:text-slate-900 whitespace-nowrap">Guia da EC 141</a><a href="sobre.html" class="text-slate-600 hover:text-slate-900 whitespace-nowrap">Sobre e contato</a><a href="privacidade.html" class="text-slate-600 hover:text-slate-900 whitespace-nowrap">Privacidade</a><a href="termos.html" class="text-slate-600 hover:text-slate-900 whitespace-nowrap">Termos de Uso</a></nav>
+      <p><strong class="text-slate-700">Aviso legal:</strong> ferramenta informativa e de simulação. Não substitui a análise de advogado trabalhista, contador ou do sindicato da categoria, nem a consulta aos textos oficiais (<a href="https://www.planalto.gov.br/ccivil_03/constituicao/emendas/emc/emc141.htm" target="_blank" rel="noopener" class="underline">EC 141/2026</a>, Decreto 13.173/2026 e portarias do MTE). O PL 4478/2024 (PICEA) é projeto em tramitação e não é lei.</p>
+      <p>© 2026 Escala 5x2 Brasil · Conteúdo legal revisado em 20/11/2026.</p>
+    </div>
+  </footer>
+
+  <!-- ==================== MODAL: EDITAR CÉLULA DA ESCALA ==================== -->
+  <div id="modal-cell" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <div>
+          <h3 id="mc-title" class="text-sm font-bold text-slate-900">Selecionar Turno</h3>
+          <p id="mc-subtitle" class="text-xs text-slate-500"></p>
+        </div>
+        <button type="button" data-close-modal="modal-cell" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div id="mc-options" class="p-4 space-y-2 max-h-80 overflow-y-auto"></div>
+      <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
+        <button type="button" data-close-modal="modal-cell" class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-200 transition">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: ADICIONAR / EDITAR FUNCIONÁRIO ==================== -->
+  <div id="modal-emp" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <h3 id="me-title" class="text-sm font-bold text-slate-900">Novo Funcionário</h3>
+        <button type="button" data-close-modal="modal-emp" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <form id="emp-form" class="p-5 space-y-4">
+        <input type="hidden" id="ef-id" value="">
+        <div>
+          <label for="ef-name" class="block text-xs font-medium text-slate-600 mb-1">Nome Completo</label>
+          <input id="ef-name" type="text" required placeholder="Ex.: Mariana Souza" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="ef-role" class="block text-xs font-medium text-slate-600 mb-1">Cargo / Função</label>
+            <input id="ef-role" type="text" required placeholder="Ex.: Atendente" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label for="ef-salary" class="block text-xs font-medium text-slate-600 mb-1">Salário Base (R$)</label>
+            <input id="ef-salary" type="number" min="1000" step="50" required value="2800" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+        <div>
+          <label for="ef-default-shift" class="block text-xs font-medium text-slate-600 mb-1">Turno Padrão Inicial</label>
+          <select id="ef-default-shift" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></select>
+        </div>
+        <label class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer">
+          <input id="ef-art8" type="checkbox" class="mt-0.5 accent-emerald-600 rounded">
+          <span class="text-xs text-slate-700 leading-snug">
+            <strong>Enquadrado no Art. 8º da EC 141/2026</strong><br>
+            <span class="text-slate-500">Diploma de nível superior + remuneração ≥ 2,5x teto RGPS (isento de controle de jornada, mantidos os 2 dias de DSR). Não se aplica a empregados públicos (Art. 8º, § 1º).</span>
+          </span>
+        </label>
+        <div class="flex items-center justify-between pt-2">
+          <button type="button" id="btn-delete-emp" class="hidden px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition">Remover</button>
+          <div class="flex items-center gap-2 ml-auto">
+            <button type="button" data-close-modal="modal-emp" class="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">Cancelar</button>
+            <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition">Salvar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+      const STORAGE_KEY = 'escala5x2_br_state_v1';
+
+      const COLOR_MAP = {
+        emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-800', dot: 'bg-emerald-500' },
+        sky:     { bg: 'bg-sky-50',     border: 'border-sky-200',     text: 'text-sky-800',     dot: 'bg-sky-500' },
+        indigo:  { bg: 'bg-indigo-50',  border: 'border-indigo-200',  text: 'text-indigo-800',  dot: 'bg-indigo-500' },
+        amber:   { bg: 'bg-amber-50',   border: 'border-amber-200',   text: 'text-amber-800',   dot: 'bg-amber-500' },
+        violet:  { bg: 'bg-violet-50',  border: 'border-violet-200',  text: 'text-violet-800',  dot: 'bg-violet-500' },
+        rose:    { bg: 'bg-rose-50',    border: 'border-rose-200',    text: 'text-rose-800',    dot: 'bg-rose-500' }
+      };
+
+      const PHASE_RULES = {
+        fase1_42h: {
+          label: 'Fase 1 — Transição (42h)',
+          maxWeekly: 42,
+          normalDailyNoCCT: 8,
+          normalDailyWithCCT: 8.4, // 8h24 * 5 = 42h (Art. 7º EC 141/2026)
+          minDSR: 2,
+          banner: '<strong>Fase 1 de Transição (a partir de 16/12/2026):</strong> Teto semanal de <strong>42h</strong> e <strong>2 dias de DSR</strong> (1 preferencialmente domingo). Com ACT/CCT ativo, a jornada diária normal pode ser ampliada (ex.: 8h24/dia em 5 dias) para distribuir as 42h (Art. 6º, I e Art. 7º da EC 141/2026).'
+        },
+        fase2_40h: {
+          label: 'Fase 2 — Definitiva (40h)',
+          maxWeekly: 40,
+          normalDailyNoCCT: 8,
+          normalDailyWithCCT: 8,
+          minDSR: 2,
+          banner: '<strong>Fase 2 Definitiva (a partir de 16/12/2027):</strong> Teto constitucional de <strong>8h diárias</strong>, <strong>40h semanais</strong> e <strong>2 dias de DSR</strong> (um preferencialmente aos domingos), sem redução salarial (Art. 7º, XIII e XV CF; Art. 6º, II da EC 141/2026).'
+        },
+        compensatorio: {
+          label: 'Regime Compensatório (§ 2º)',
+          maxWeekly: 40,
+          normalDailyNoCCT: 8,
+          normalDailyWithCCT: 8,
+          minDSR: 1,
+          banner: '<strong>Regime Compensatório Mensal (Art. 7º, § 2º CF — EC 141/2026):</strong> Excepcionalmente via ACT/CCT, permite assegurar <strong>média de 2 dias de DSR no mês-calendário</strong>, desde que garantido <strong>pelo menos 1 dia de DSR</strong> dentro de cada semana de trabalho.'
+        },
+        picea_4x3: {
+          label: 'Simulação 4x3 (PL 4478/2024)',
+          maxWeekly: 36,
+          normalDailyNoCCT: 9,
+          normalDailyWithCCT: 9,
+          minDSR: 3,
+          banner: '<strong>Simulação Escala 4x3 (PL nº 4478/2024 — PICEA):</strong> 4 dias consecutivos de trabalho seguidos por <strong>3 dias de descanso</strong>, com carga semanal máxima de <strong>36h</strong> (ex.: 4 dias de 9h ou 8h). <em>Cenário simulado de Projeto de Lei em tramitação.</em>'
+        }
+      };
+
+      const DEFAULT_STATE = {
+        activeTab: 'escala',
+        config: {
+          phase: 'fase1_42h',
+          hasCCT: true,
+          operationMode: 'todos_dias',
+          minCoverage: 4,
+          inssRate: 20,
+          ratRate: 2,
+          simSalary: 3000
+        },
+        shifts: [
+          { id: 'COM8',   code: 'COM8',  name: 'Comercial 8h',      start: '08:00', end: '17:00', breakMin: 60, color: 'emerald' },
+          { id: 'TRA824', code: '8h24',  name: 'Transição 42h',     start: '08:00', end: '17:24', breakMin: 60, color: 'sky' },
+          { id: 'MAN8',   code: 'MAN8',  name: 'Manhã 8h',          start: '06:00', end: '15:00', breakMin: 60, color: 'indigo' },
+          { id: 'TAR8',   code: 'TAR8',  name: 'Tarde 8h',          start: '13:00', end: '22:00', breakMin: 60, color: 'amber' },
+          { id: 'MEIO6',  code: '6H',    name: 'Meio Período 6h',   start: '08:00', end: '14:15', breakMin: 15, color: 'violet' },
+          { id: 'NOT7',   code: 'NOT',   name: 'Noturno (22h–05h)', start: '22:00', end: '05:00', breakMin: 60, color: 'rose' }
+        ],
+        employees: [
+          { id: 'e1', name: 'Ana Paula Ferreira',  role: 'Supervisora',   salary: 4500, exemptArt8: false, schedule: ['TRA824', 'TRA824', 'TRA824', 'TRA824', 'TRA824', 'DSR', 'DSR'] },
+          { id: 'e2', name: 'Carlos Eduardo Lima', role: 'Atendimento',   salary: 2600, exemptArt8: false, schedule: ['MAN8', 'MAN8', 'MAN8', 'MAN8', 'DSR', 'MAN8', 'DSR'] },
+          { id: 'e3', name: 'Juliana Nascimento',  role: 'Atendimento',   salary: 2600, exemptArt8: false, schedule: ['TAR8', 'TAR8', 'DSR', 'TAR8', 'TAR8', 'TAR8', 'DSR'] },
+          { id: 'e4', name: 'Rafael Santos',       role: 'Operações',     salary: 3100, exemptArt8: false, schedule: ['DSR', 'MAN8', 'MAN8', 'MAN8', 'MAN8', 'DSR', 'MAN8'] },
+          { id: 'e5', name: 'Beatriz Oliveira',    role: 'Operações',     salary: 3100, exemptArt8: false, schedule: ['TAR8', 'DSR', 'TAR8', 'TAR8', 'DSR', 'TAR8', 'TAR8'] },
+          { id: 'e6', name: 'Lucas Almeida',       role: 'Apoio / Caixa', salary: 2300, exemptArt8: false, schedule: ['COM8', 'COM8', 'DSR', 'DSR', 'COM8', 'COM8', 'COM8'] }
+        ]
+      };
+
+      let state = loadState();
+      let coverageChartInstance = null;
+      let piceaChartInstance = null;
+      let editingCell = null; // { empId, dayIdx }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.config && Array.isArray(parsed.shifts) && Array.isArray(parsed.employees)) {
+              return parsed;
+            }
+          }
+        } catch (e) { /* sandbox storage fallback */ }
+        return JSON.parse(JSON.stringify(DEFAULT_STATE));
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) { /* ignore */ }
+      }
+
+      // ==================== TIME & LABOR MATH ====================
+      function timeToMin(hhmm) {
+        const parts = String(hhmm || '00:00').split(':');
+        const h = parseInt(parts[0], 10) || 0;
+        const m = parseInt(parts[1], 10) || 0;
+        return h * 60 + m;
+      }
+
+      function formatHours(decHours) {
+        if (!Number.isFinite(decHours) || decHours <= 0) return '0h';
+        const totalMin = Math.round(decHours * 60);
+        const h = Math.floor(totalMin / 60);
+        const m = totalMin % 60;
+        return m === 0 ? `${h}h` : `${h}h${String(m).padStart(2, '0')}`;
+      }
+
+      function formatBRL(value) {
+        const safe = Number.isFinite(value) ? value : 0;
+        return safe.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      }
+
+      // Compute shift metrics including CLT Art. 73 night hours (22:00-05:00, 52m30s reduced hour)
+      function calcShiftMetrics(shift) {
+        const startMin = timeToMin(shift.start);
+        let endMin = timeToMin(shift.end);
+        if (endMin <= startMin) endMin += 1440; // crosses midnight
+
+        const grossMin = endMin - startMin;
+        const breakMin = Math.max(0, Number(shift.breakMin) || 0);
+        const netClockMin = Math.max(0, grossMin - breakMin);
+
+        // Calculate overlap with night window [22:00..29:00] and [00:00..05:00]
+        const nightWindows = [[0, 300], [1320, 1740]];
+        let rawNightMin = 0;
+        for (const [wStart, wEnd] of nightWindows) {
+          const ovStart = Math.max(startMin, wStart);
+          const ovEnd = Math.min(endMin, wEnd);
+          if (ovEnd > ovStart) rawNightMin += (ovEnd - ovStart);
+        }
+        // Proportional break deduction from night portion if shift is mostly night
+        const nightRatio = grossMin > 0 ? rawNightMin / grossMin : 0;
+        const netNightClockMin = Math.max(0, rawNightMin - breakMin * nightRatio);
+        const netDayClockMin = Math.max(0, netClockMin - netNightClockMin);
+
+        // CLT Art. 73 §1º: 1 night hour = 52.5 min => factor 60 / 52.5
+        const fictaNightHours = (netNightClockMin / 52.5);
+        const totalPayableHours = (netDayClockMin / 60) + fictaNightHours;
+
+        return {
+          startMin,
+          endMin,
+          grossHours: grossMin / 60,
+          netClockHours: netClockMin / 60,
+          netNightClockHours: netNightClockMin / 60,
+          payableHours: totalPayableHours,
+          breakMin,
+          hasNight: netNightClockMin > 0
+        };
+      }
+
+      function getShiftById(id) {
+        return state.shifts.find(s => s.id === id) || null;
+      }
+
+      function validateEmployee(emp) {
+        const rule = PHASE_RULES[state.config.phase] || PHASE_RULES.fase1_42h;
+        const normalDailyLimit = state.config.hasCCT ? rule.normalDailyWithCCT : rule.normalDailyNoCCT;
+        const minLongBreak = state.config.hasCCT ? 30 : 60; // Art. 71 & Art. 611-A CLT
+
+        let totalHours = 0;
+        let overtimeHours = 0;
+        let dsrCount = 0;
+        let sundayDSR = emp.schedule[6] === 'DSR';
+        const issues = []; // { level: 'error'|'warn', text: string }
+
+        for (let d = 0; d < 7; d++) {
+          const cell = emp.schedule[d];
+          if (cell === 'DSR') {
+            dsrCount++;
+            continue;
+          }
+          const shift = getShiftById(cell);
+          if (!shift) continue;
+
+          const m = calcShiftMetrics(shift);
+          totalHours += m.payableHours;
+
+          if (!emp.exemptArt8) {
+            // Daily overtime check (CLT Art. 59: max 2h extra/day)
+            const dailyExtra = Math.max(0, m.payableHours - normalDailyLimit);
+            overtimeHours += dailyExtra;
+            if (dailyExtra > 2.01) {
+              issues.push({
+                level: 'error',
+                text: `${DAYS[d]}: jornada de ${formatHours(m.payableHours)} excede o limite de +2h extras/dia (CLT Art. 59).`
+              });
+            } else if (dailyExtra > 0.05) {
+              issues.push({
+                level: 'warn',
+                text: `${DAYS[d]}: ${formatHours(dailyExtra)} de hora extra acima da jornada normal (${formatHours(normalDailyLimit)}).`
+              });
+            }
+
+            // Intrajornada check (CLT Art. 71)
+            if (m.netClockHours > 6 && m.breakMin < minLongBreak) {
+              issues.push({
+                level: 'error',
+                text: `${DAYS[d]} (${shift.code}): intervalo de ${m.breakMin} min abaixo do mínimo de ${minLongBreak} min para jornada >6h (CLT Art. 71${state.config.hasCCT ? ' / 611-A' : ''}).`
+              });
+            } else if (m.netClockHours > 4 && m.netClockHours <= 6 && m.breakMin < 15) {
+              issues.push({
+                level: 'error',
+                text: `${DAYS[d]} (${shift.code}): intervalo abaixo de 15 min para jornada de 4h a 6h (CLT Art. 71, §1º).`
+              });
+            } else if (m.netClockHours > 6 && m.breakMin > 120) {
+              issues.push({
+                level: 'warn',
+                text: `${DAYS[d]} (${shift.code}): intervalo superior a 2h exige acordo escrito ou CCT (CLT Art. 71).`
+              });
+            }
+
+            // Interjornada check (CLT Art. 66: min 11h between consecutive shifts)
+            const nextDay = (d + 1) % 7;
+            const nextCell = emp.schedule[nextDay];
+            if (nextCell && nextCell !== 'DSR') {
+              const nextShift = getShiftById(nextCell);
+              if (nextShift) {
+                const nm = calcShiftMetrics(nextShift);
+                // Gap from end of day d to start of day d+1
+                const gapMin = (1440 + nm.startMin) - m.endMin;
+                if (gapMin < 660) {
+                  issues.push({
+                    level: 'error',
+                    text: `${DAYS[d]}→${DAYS[nextDay]}: interjornada de ${formatHours(gapMin / 60)} é inferior ao mínimo de 11h (CLT Art. 66).`
+                  });
+                }
+              }
+            }
+          }
+        }
+
+        // DSR count check (EC 141/2026 Art. 7º XV & §2º — applies even to Art. 8º exempt)
+        if (dsrCount < rule.minDSR) {
+          issues.push({
+            level: 'error',
+            text: `Apenas ${dsrCount} dia(s) de DSR na semana; o regime exige mínimo de ${rule.minDSR} dia(s) (EC 141/2026, Art. 7º, XV).`
+          });
+        } else if (state.config.phase === 'compensatorio' && dsrCount === 1) {
+          issues.push({
+            level: 'warn',
+            text: `1 dia de DSR nesta semana: lembre de compensar no mês-calendário para atingir média de 2 dias/sem (EC 141/2026, Art. 7º, § 2º).`
+          });
+        }
+
+        if (!sundayDSR) {
+          issues.push({
+            level: 'warn',
+            text: `Sem folga no domingo nesta semana; garanta revezamento com folga dominical (EC 141/2026, Art. 7º, XV e CLT Art. 67).`
+          });
+        }
+
+        // Weekly limit check (unless Art. 8º exempt)
+        if (!emp.exemptArt8 && totalHours > rule.maxWeekly + 0.05) {
+          const excess = totalHours - rule.maxWeekly;
+          issues.push({
+            level: excess > 6 ? 'error' : 'warn',
+            text: `Carga semanal de ${formatHours(totalHours)} ultrapassa o teto de ${rule.maxWeekly}h (+${formatHours(excess)} excedentes).`
+          });
+        }
+
+        // PICEA 4x3 consecutive days check
+        if (state.config.phase === 'picea_4x3' && dsrCount >= 3) {
+          const worked = emp.schedule.map(c => c !== 'DSR');
+          let maxConsec = 0, cur = 0;
+          for (let i = 0; i < 14; i++) {
+            if (worked[i % 7]) { cur++; maxConsec = Math.max(maxConsec, cur); }
+            else cur = 0;
+          }
+          if (maxConsec > 4) {
+            issues.push({
+              level: 'warn',
+              text: `No PICEA 4x3 (PL 4478/2024, Art. 2º, I), a escala prevê 4 dias consecutivos seguidos de 3 dias de descanso.`
+            });
+          }
+        }
+
+        const hasError = issues.some(i => i.level === 'error');
+        const hasWarn = issues.some(i => i.level === 'warn');
+        const status = hasError ? 'error' : (hasWarn ? 'warn' : 'ok');
+
+        return {
+          totalHours,
+          overtimeHours: Math.max(overtimeHours, Math.max(0, totalHours - rule.maxWeekly)),
+          dsrCount,
+          sundayDSR,
+          status,
+          issues
+        };
+      }
+
+      // ==================== AUTO SCHEDULE GENERATOR ====================
+      function autoGenerateSchedule() {
+        const phase = state.config.phase;
+        const op = state.config.operationMode;
+        const rule = PHASE_RULES[phase];
+
+        // Pick best default shift for this phase
+        let primaryShiftId = 'COM8';
+        if (phase === 'fase1_42h' && state.config.hasCCT && getShiftById('TRA824')) {
+          primaryShiftId = 'TRA824';
+        } else if (getShiftById('COM8')) {
+          primaryShiftId = 'COM8';
+        } else if (state.shifts.length > 0) {
+          primaryShiftId = state.shifts[0].id;
+        }
+
+        state.employees.forEach((emp, idx) => {
+          // Keep employee's most common non-DSR shift if valid, else use primaryShiftId
+          const existingShifts = emp.schedule.filter(c => c !== 'DSR' && getShiftById(c));
+          let chosenShift = existingShifts.length > 0 ? existingShifts[0] : primaryShiftId;
+          if (phase === 'fase1_42h' && state.config.hasCCT && chosenShift === 'COM8' && getShiftById('TRA824')) {
+            chosenShift = 'TRA824';
+          }
+          if (phase === 'fase2_40h' && chosenShift === 'TRA824' && getShiftById('COM8')) {
+            chosenShift = 'COM8';
+          }
+
+          const sched = new Array(7).fill(chosenShift);
+
+          if (phase === 'picea_4x3') {
+            // 4 consecutive work days + 3 consecutive DSR days, rotating start
+            const startWork = op === 'seg_sex' ? (idx % 2) : (idx % 4);
+            for (let d = 0; d < 7; d++) sched[d] = 'DSR';
+            for (let k = 0; k < 4; k++) {
+              sched[(startWork + k) % 7] = chosenShift;
+            }
+          } else if (op === 'seg_sex') {
+            // Standard Mon-Fri 5x2: Sat & Sun off
+            sched[5] = 'DSR';
+            sched[6] = 'DSR';
+          } else if (op === 'seg_sab') {
+            // Mon-Sat open: Sunday always off + 1 rotating weekday off
+            sched[6] = 'DSR';
+            const offDay = idx % 6; // rotate Mon..Sat
+            sched[offDay] = 'DSR';
+          } else {
+            // 7-day operation: prioritize Sunday off for majority, rotate 2 DSR days smoothly
+            const patterns = [
+              [5, 6], // Sat, Sun
+              [4, 6], // Fri, Sun
+              [2, 6], // Wed, Sun
+              [0, 5], // Mon, Sat
+              [1, 4], // Tue, Fri
+              [2, 3]  // Wed, Thu
+            ];
+            const pair = patterns[idx % patterns.length];
+            sched[pair[0]] = 'DSR';
+            sched[pair[1]] = 'DSR';
+          }
+
+          emp.schedule = sched;
+        });
+
+        saveState();
+        renderAll();
+        showToast(`Escala ${rule.label} gerada com sucesso para ${state.employees.length} funcionários.`);
+      }
+
+      // ==================== RENDERING ====================
+      function renderAll() {
+        syncConfigInputs();
+        renderScheduleTab();
+        renderShiftsTab();
+        renderSimulatorTab();
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      function syncConfigInputs() {
+        document.getElementById('cfg-phase').value = state.config.phase;
+        document.getElementById('cfg-operation').value = state.config.operationMode;
+        document.getElementById('cfg-coverage').value = state.config.minCoverage;
+        document.getElementById('cfg-coverage-label').textContent = state.config.minCoverage;
+        document.getElementById('cfg-cct').checked = !!state.config.hasCCT;
+        document.getElementById('chart-meta-badge').textContent = `Meta: ${state.config.minCoverage}/dia`;
+
+        const rule = PHASE_RULES[state.config.phase] || PHASE_RULES.fase1_42h;
+        document.getElementById('legal-phase-text').innerHTML = rule.banner;
+      }
+
+      function renderScheduleTab() {
+        const tbody = document.getElementById('schedule-tbody');
+        const tfoot = document.getElementById('schedule-tfoot');
+        const legend = document.getElementById('shift-legend');
+        const alertsList = document.getElementById('audit-alerts-list');
+
+        // Render shift legend
+        legend.innerHTML = state.shifts.map(s => {
+          const c = COLOR_MAP[s.color] || COLOR_MAP.emerald;
+          return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md ${c.bg} ${c.text} border ${c.border}">
+            <span class="w-1.5 h-1.5 rounded-full ${c.dot}"></span>
+            <strong>${escapeHtml(s.code)}</strong> ${escapeHtml(s.start)}–${escapeHtml(s.end)}
+          </span>`;
+        }).join('') + `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200"><strong>DSR</strong> Folga</span>`;
+
+        const dailyCounts = [0, 0, 0, 0, 0, 0, 0];
+        let totalCompliant = 0;
+        let totalOvertime = 0;
+        const allAlerts = [];
+
+        if (state.employees.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="10" class="py-10 text-center text-slate-500">Nenhum funcionário cadastrado. Clique em <strong>Novo Funcionário</strong> para começar.</td></tr>`;
+        } else {
+          tbody.innerHTML = state.employees.map(emp => {
+            const audit = validateEmployee(emp);
+            if (audit.status !== 'error') totalCompliant++;
+            totalOvertime += audit.overtimeHours;
+
+            audit.issues.forEach(issue => {
+              allAlerts.push({ empName: emp.name, level: issue.level, text: issue.text });
+            });
+
+            const cellsHtml = emp.schedule.map((cell, dayIdx) => {
+              if (cell === 'DSR') {
+                return `<td class="p-1.5 text-center">
+                  <button type="button" data-action="edit-cell" data-emp="${emp.id}" data-day="${dayIdx}" class="cell-btn w-full py-2 px-1 rounded-xl border border-dashed border-slate-300 bg-slate-50 text-slate-500 hover:border-slate-400">
+                    <div class="font-bold text-[11px]">DSR</div>
+                    <div class="text-[10px] opacity-80">Folga</div>
+                  </button>
+                </td>`;
+              }
+              dailyCounts[dayIdx]++;
+              const shift = getShiftById(cell);
+              if (!shift) {
+                return `<td class="p-1.5 text-center">
+                  <button type="button" data-action="edit-cell" data-emp="${emp.id}" data-day="${dayIdx}" class="cell-btn w-full py-2 px-1 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-[11px] font-semibold">Definir</button>
+                </td>`;
+              }
+              const c = COLOR_MAP[shift.color] || COLOR_MAP.emerald;
+              return `<td class="p-1.5 text-center">
+                <button type="button" data-action="edit-cell" data-emp="${emp.id}" data-day="${dayIdx}" class="cell-btn w-full py-2 px-1 rounded-xl border ${c.border} ${c.bg} ${c.text}">
+                  <div class="font-bold text-[11px] leading-tight">${escapeHtml(shift.code)}</div>
+                  <div class="text-[10px] opacity-80 leading-tight mt-0.5">${escapeHtml(shift.start)}–${escapeHtml(shift.end)}</div>
+                </button>
+              </td>`;
+            }).join('');
+
+            const statusBadge = audit.status === 'ok'
+              ? `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Conforme</span>`
+              : audit.status === 'warn'
+                ? `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">Atenção (${audit.issues.length})</span>`
+                : `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">Irregular (${audit.issues.length})</span>`;
+
+            return `<tr class="hover:bg-slate-50/70 transition">
+              <td class="py-2.5 px-4">
+                <div class="flex items-center justify-between gap-2">
+                  <div>
+                    <div class="font-semibold text-slate-900 flex items-center gap-1.5">
+                      <span>${escapeHtml(emp.name)}</span>
+                      ${emp.exemptArt8 ? '<span title="Art. 8º EC 141/2026" class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[10px] font-bold">Art.8º</span>' : ''}
+                    </div>
+                    <div class="text-[11px] text-slate-500">${escapeHtml(emp.role)}</div>
+                  </div>
+                  <button type="button" data-action="edit-emp" data-emp="${emp.id}" title="Editar funcionário" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 no-print">
+                    <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                  </button>
+                </div>
+              </td>
+              ${cellsHtml}
+              <td class="py-2 px-3 text-center whitespace-nowrap">
+                <div class="font-bold text-slate-900">${formatHours(audit.totalHours)}</div>
+                <div class="text-[11px] text-slate-500">${audit.dsrCount} DSR${audit.sundayDSR ? ' · Dom' : ''}</div>
+              </td>
+              <td class="py-2 px-3 text-center whitespace-nowrap">${statusBadge}</td>
+            </tr>`;
+          }).join('');
+        }
+
+        // Footer: daily coverage count
+        const activeDaysMask = getActiveDaysMask();
+        let daysMeetingGoal = 0;
+        let totalActiveDays = 0;
+        const footCells = dailyCounts.map((cnt, idx) => {
+          const isOpen = activeDaysMask[idx];
+          if (isOpen) {
+            totalActiveDays++;
+            if (cnt >= state.config.minCoverage) daysMeetingGoal++;
+          }
+          const cls = !isOpen
+            ? 'text-slate-400'
+            : (cnt >= state.config.minCoverage ? 'text-emerald-700' : 'text-rose-600');
+          return `<td class="py-2.5 px-2 text-center ${cls}">${cnt} ${isOpen ? '' : '<span class="text-[10px] font-normal">(fech.)</span>'}</td>`;
+        }).join('');
+
+        tfoot.innerHTML = `<tr>
+          <td class="py-2.5 px-4 text-slate-700">Cobertura Diária</td>
+          ${footCells}
+          <td colspan="2" class="py-2.5 px-3 text-center text-slate-600">Meta: ${state.config.minCoverage}/dia</td>
+        </tr>`;
+
+        // KPIs
+        const empCount = state.employees.length;
+        const compliancePct = empCount > 0 ? Math.round((totalCompliant / empCount) * 100) : 100;
+        document.getElementById('kpi-team').textContent = empCount;
+        document.getElementById('kpi-compliance').textContent = `${compliancePct}%`;
+        document.getElementById('kpi-compliance').className = `mt-2 text-2xl font-bold ${compliancePct === 100 ? 'text-emerald-600' : (compliancePct >= 70 ? 'text-amber-600' : 'text-rose-600')}`;
+        document.getElementById('kpi-compliance-sub').textContent = `${totalCompliant} de ${empCount} sem infrações críticas`;
+        document.getElementById('kpi-overtime').textContent = formatHours(totalOvertime);
+        document.getElementById('kpi-coverage').textContent = `${daysMeetingGoal}/${totalActiveDays}`;
+        document.getElementById('kpi-coverage-sub').textContent = daysMeetingGoal === totalActiveDays ? 'meta atingida em todos os dias' : 'alguns dias abaixo da meta';
+
+        // Audit Alerts List
+        const errCount = allAlerts.filter(a => a.level === 'error').length;
+        const warnCount = allAlerts.filter(a => a.level === 'warn').length;
+        const badge = document.getElementById('audit-count-badge');
+        if (errCount > 0) {
+          badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200';
+          badge.textContent = `${errCount} irregularidade(s) · ${warnCount} aviso(s)`;
+        } else if (warnCount > 0) {
+          badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200';
+          badge.textContent = `${warnCount} ponto(s) de atenção`;
+        } else {
+          badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
+          badge.textContent = '100% em conformidade';
+        }
+
+        if (allAlerts.length === 0) {
+          alertsList.innerHTML = `<div class="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-xs text-emerald-800 flex items-center gap-2.5">
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+            <span>Nenhuma irregularidade encontrada. Todas as jornadas, intervalos e dias de DSR respeitam a EC nº 141/2026 e a CLT.</span>
+          </div>`;
+        } else {
+          // Errors first, then warnings
+          allAlerts.sort((a, b) => (a.level === 'error' ? -1 : 1) - (b.level === 'error' ? -1 : 1));
+          alertsList.innerHTML = allAlerts.map(a => {
+            const isErr = a.level === 'error';
+            return `<div class="rounded-xl border p-3 text-xs flex items-start gap-2.5 ${isErr ? 'bg-rose-50 border-rose-200 text-rose-900' : 'bg-amber-50 border-amber-200 text-amber-900'}">
+              <i data-lucide="${isErr ? 'alert-octagon' : 'alert-triangle'}" class="w-4 h-4 shrink-0 mt-0.5 ${isErr ? 'text-rose-600' : 'text-amber-600'}"></i>
+              <div><strong>${escapeHtml(a.empName)}:</strong> ${escapeHtml(a.text)}</div>
+            </div>`;
+          }).join('');
+        }
+
+        renderCoverageChart(dailyCounts, activeDaysMask);
+      }
+
+      function getActiveDaysMask() {
+        if (state.config.operationMode === 'seg_sex') return [true, true, true, true, true, false, false];
+        if (state.config.operationMode === 'seg_sab') return [true, true, true, true, true, true, false];
+        return [true, true, true, true, true, true, true];
+      }
+
+      function renderCoverageChart(dailyCounts, activeDaysMask) {
+        const ctx = document.getElementById('coverageChart');
+        if (!ctx || typeof Chart === 'undefined') return;
+        if (coverageChartInstance) coverageChartInstance.destroy();
+
+        const bgColors = dailyCounts.map((cnt, i) => {
+          if (!activeDaysMask[i]) return 'rgba(148, 163, 184, 0.45)';
+          return cnt >= state.config.minCoverage ? 'rgba(16, 185, 129, 0.85)' : 'rgba(244, 63, 94, 0.8)';
+        });
+
+        coverageChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: DAYS,
+            datasets: [
+              {
+                label: 'Escalados',
+                data: dailyCounts,
+                backgroundColor: bgColors,
+                borderRadius: 8,
+                maxBarThickness: 38
+              },
+              {
+                type: 'line',
+                label: 'Meta Mínima',
+                data: activeDaysMask.map(open => open ? state.config.minCoverage : null),
+                borderColor: '#4f46e5',
+                borderDash: [5, 5],
+                borderWidth: 2,
+                pointRadius: 3,
+                fill: false
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+            },
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 }, grid: { color: '#f1f5f9' } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }
+
+      // ==================== TAB 2: SHIFTS ====================
+      function renderShiftsTab() {
+        const container = document.getElementById('shifts-list');
+        container.innerHTML = state.shifts.map(s => {
+          const m = calcShiftMetrics(s);
+          const c = COLOR_MAP[s.color] || COLOR_MAP.emerald;
+          return `<div class="rounded-xl border ${c.border} bg-white p-4 flex flex-col justify-between gap-3 shadow-xs">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold ${c.bg} ${c.text}">
+                  <span class="w-1.5 h-1.5 rounded-full ${c.dot}"></span> ${escapeHtml(s.code)}
+                </span>
+                <h3 class="mt-1.5 text-sm font-bold text-slate-900">${escapeHtml(s.name)}</h3>
+              </div>
+              <div class="flex items-center gap-1">
+                <button type="button" data-action="edit-shift" data-shift="${s.id}" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100" title="Editar turno">
+                  <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                </button>
+                <button type="button" data-action="delete-shift" data-shift="${s.id}" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50" title="Excluir turno">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-xs bg-slate-50 rounded-lg p-2.5">
+              <div><div class="text-[10px] text-slate-500">Horário</div><div class="font-semibold text-slate-800">${escapeHtml(s.start)}–${escapeHtml(s.end)}</div></div>
+              <div><div class="text-[10px] text-slate-500">Intervalo</div><div class="font-semibold text-slate-800">${s.breakMin} min</div></div>
+              <div><div class="text-[10px] text-slate-500">Jornada</div><div class="font-semibold text-slate-800">${formatHours(m.payableHours)}</div></div>
+            </div>
+            ${m.hasNight ? `<div class="text-[11px] text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg">Inclui período noturno (${formatHours(m.netNightClockHours)} relógio · adicional 20% + hora 52m30s — CLT Art. 73)</div>` : ''}
+          </div>`;
+        }).join('');
+
+        updateShiftFormPreview();
+      }
+
+      function updateShiftFormPreview() {
+        const tempShift = {
+          start: document.getElementById('sf-start').value || '08:00',
+          end: document.getElementById('sf-end').value || '17:00',
+          breakMin: parseInt(document.getElementById('sf-break').value, 10) || 0
+        };
+        const m = calcShiftMetrics(tempShift);
+        const minLongBreak = state.config.hasCCT ? 30 : 60;
+        let breakMsg = '<span class="text-emerald-700 font-semibold">Intervalo intrajornada conforme CLT Art. 71.</span>';
+        if (m.netClockHours > 6 && m.breakMin < minLongBreak) {
+          breakMsg = `<span class="text-rose-700 font-semibold">Atenção: jornada &gt;6h exige mínimo de ${minLongBreak} min de intervalo (CLT Art. 71${state.config.hasCCT ? '/611-A' : ''}).</span>`;
+        } else if (m.netClockHours > 4 && m.netClockHours <= 6 && m.breakMin < 15) {
+          breakMsg = '<span class="text-rose-700 font-semibold">Atenção: jornada de 4h a 6h exige mínimo de 15 min de pausa (CLT Art. 71, §1º).</span>';
+        }
+
+        document.getElementById('sf-preview').innerHTML = `
+          <div class="flex justify-between"><span class="text-slate-600">Tempo líquido no relógio:</span><strong>${formatHours(m.netClockHours)}</strong></div>
+          <div class="flex justify-between"><span class="text-slate-600">Jornada computada (c/ hora noturna 52m30s):</span><strong>${formatHours(m.payableHours)}</strong></div>
+          <div class="flex justify-between"><span class="text-slate-600">Projeção em 5 dias (5x2):</span><strong>${formatHours(m.payableHours * 5)}/sem</strong></div>
+          <div class="pt-1 border-t border-slate-200">${breakMsg}</div>
+        `;
+      }
+
+      // ==================== TAB 3: SIMULATOR ====================
+      function renderSimulatorTab() {
+        const salary = Math.max(0, Number(state.config.simSalary) || 3000);
+        document.getElementById('sim-salary').value = salary;
+        document.getElementById('sim-inss').value = state.config.inssRate;
+        document.getElementById('sim-rat').value = state.config.ratRate;
+
+        const scenarios = [
+          { title: 'Cenário Anterior (44h/sem)', div: 220, badge: 'Antes da EC 141', cls: 'bg-slate-50 border-slate-200' },
+          { title: 'Fase 1 — Transição (42h/sem)', div: 210, badge: 'Dez/2026', cls: 'bg-emerald-50 border-emerald-200' },
+          { title: 'Fase 2 — Definitiva (40h/sem)', div: 200, badge: 'Dez/2027', cls: 'bg-indigo-50 border-indigo-200' }
+        ];
+
+        const baseHourly = salary / 220;
+        document.getElementById('sim-hourly-cards').innerHTML = scenarios.map(sc => {
+          const val = salary / sc.div;
+          const diffPct = baseHourly > 0 ? ((val - baseHourly) / baseHourly) * 100 : 0;
+          return `<div class="rounded-xl border ${sc.cls} p-3 flex items-center justify-between">
+            <div>
+              <div class="text-xs font-bold text-slate-900">${sc.title}</div>
+              <div class="text-[11px] text-slate-500">Divisor mensal: ${sc.div}h · ${sc.badge}</div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm font-bold text-slate-900">${formatBRL(val)}/h</div>
+              <div class="text-[11px] font-medium ${diffPct > 0 ? 'text-emerald-700' : 'text-slate-500'}">${diffPct > 0 ? `+${diffPct.toFixed(1)}% valor-hora` : 'referência'}</div>
+            </div>
+          </div>`;
+        }).join('');
+
+        // PICEA Charges Calculation (PL 4478/2024 Art. 3º)
+        const payroll = state.employees.reduce((sum, e) => sum + (Number(e.salary) || 0), 0);
+        const inss = (Number(state.config.inssRate) || 20) / 100;
+        const fgts = 0.08;
+        const rat = (Number(state.config.ratRate) || 2) / 100;
+
+        const stdTotal = payroll * (inss + fgts + rat);
+        const picea5x2 = payroll * (inss * 0.75 + 0.06 + rat * 0.75); // -25% INSS/RAT, FGTS 6%
+        const picea4x3 = payroll * (inss * 0.60 + 0.048 + rat * 0.60); // -40% INSS/RAT, FGTS 4.8%
+
+        document.getElementById('picea-summary-cards').innerHTML = `
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <div class="text-[11px] text-slate-500">Encargos Padrão / Mês</div>
+            <div class="mt-1 text-base font-bold text-slate-900">${formatBRL(stdTotal)}</div>
+            <div class="text-[10px] text-slate-500">Folha base: ${formatBRL(payroll)}</div>
+          </div>
+          <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+            <div class="text-[11px] text-emerald-700 font-medium">PICEA 5x2 (-25%)</div>
+            <div class="mt-1 text-base font-bold text-emerald-900">${formatBRL(picea5x2)}</div>
+            <div class="text-[10px] text-emerald-700 font-semibold">Economia: ${formatBRL(stdTotal - picea5x2)}/mês</div>
+          </div>
+          <div class="rounded-xl border border-indigo-200 bg-indigo-50 p-3">
+            <div class="text-[11px] text-indigo-700 font-medium">PICEA 4x3 (-40%)</div>
+            <div class="mt-1 text-base font-bold text-indigo-900">${formatBRL(picea4x3)}</div>
+            <div class="text-[10px] text-indigo-700 font-semibold">Economia: ${formatBRL(stdTotal - picea4x3)}/mês</div>
+          </div>
+        `;
+
+        renderPiceaChart(stdTotal, picea5x2, picea4x3);
+      }
+
+      function renderPiceaChart(stdTotal, picea5x2, picea4x3) {
+        const ctx = document.getElementById('piceaChart');
+        if (!ctx || typeof Chart === 'undefined') return;
+        if (piceaChartInstance) piceaChartInstance.destroy();
+
+        piceaChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Regime Padrão (CLT)', 'PICEA 5x2 (-25%)', 'PICEA 4x3 (-40%)'],
+            datasets: [{
+              label: 'Encargos Mensais Estimados (R$)',
+              data: [Number(stdTotal.toFixed(2)), Number(picea5x2.toFixed(2)), Number(picea4x3.toFixed(2))],
+              backgroundColor: ['#64748b', '#10b981', '#6366f1'],
+              borderRadius: 8,
+              maxBarThickness: 56
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }
+
+      // ==================== MODALS ====================
+      function openCellModal(empId, dayIdx) {
+        const emp = state.employees.find(e => e.id === empId);
+        if (!emp) return;
+        editingCell = { empId, dayIdx };
+
+        document.getElementById('mc-title').textContent = `${emp.name} — ${DAYS[dayIdx]}`;
+        document.getElementById('mc-subtitle').textContent = 'Escolha o turno ou defina Repouso Semanal Remunerado (DSR).';
+
+        const currentVal = emp.schedule[dayIdx];
+        const optionsEl = document.getElementById('mc-options');
+
+        let html = `<button type="button" data-pick-shift="DSR" class="w-full text-left px-3.5 py-2.5 rounded-xl border transition flex items-center justify-between ${currentVal === 'DSR' ? 'border-slate-900 bg-slate-100 ring-1 ring-slate-900' : 'border-slate-200 hover:bg-slate-50'}">
+          <div>
+            <div class="text-xs font-bold text-slate-900">DSR — Folga Semanal Remunerada</div>
+            <div class="text-[11px] text-slate-500">Art. 7º, XV CF (EC 141/2026)</div>
+          </div>
+          <span class="text-xs font-semibold text-slate-500">0h</span>
+        </button>`;
+
+        html += state.shifts.map(s => {
+          const m = calcShiftMetrics(s);
+          const c = COLOR_MAP[s.color] || COLOR_MAP.emerald;
+          const active = currentVal === s.id;
+          return `<button type="button" data-pick-shift="${s.id}" class="w-full text-left px-3.5 py-2.5 rounded-xl border transition flex items-center justify-between ${active ? 'border-emerald-600 bg-emerald-50 ring-1 ring-emerald-600' : 'border-slate-200 hover:bg-slate-50'}">
+            <div class="flex items-center gap-2.5">
+              <span class="w-2.5 h-2.5 rounded-full ${c.dot} shrink-0"></span>
+              <div>
+                <div class="text-xs font-bold text-slate-900">${escapeHtml(s.name)} (${escapeHtml(s.code)})</div>
+                <div class="text-[11px] text-slate-500">${escapeHtml(s.start)} às ${escapeHtml(s.end)} · intervalo ${s.breakMin} min</div>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-slate-700">${formatHours(m.payableHours)}</span>
+          </button>`;
+        }).join('');
+
+        optionsEl.innerHTML = html;
+        toggleModal('modal-cell', true);
+      }
+
+      function openEmpModal(empId) {
+        const select = document.getElementById('ef-default-shift');
+        select.innerHTML = state.shifts.map(s => `<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.start)}–${escapeHtml(s.end)})</option>`).join('');
+
+        const delBtn = document.getElementById('btn-delete-emp');
+        if (empId) {
+          const emp = state.employees.find(e => e.id === empId);
+          if (!emp) return;
+          document.getElementById('me-title').textContent = 'Editar Funcionário';
+          document.getElementById('ef-id').value = emp.id;
+          document.getElementById('ef-name').value = emp.name;
+          document.getElementById('ef-role').value = emp.role;
+          document.getElementById('ef-salary').value = emp.salary;
+          document.getElementById('ef-art8').checked = !!emp.exemptArt8;
+          const firstShift = emp.schedule.find(c => c !== 'DSR' && getShiftById(c));
+          if (firstShift) select.value = firstShift;
+          delBtn.classList.remove('hidden');
+        } else {
+          document.getElementById('me-title').textContent = 'Novo Funcionário';
+          document.getElementById('ef-id').value = '';
+          document.getElementById('ef-name').value = '';
+          document.getElementById('ef-role').value = '';
+          document.getElementById('ef-salary').value = 2800;
+          document.getElementById('ef-art8').checked = false;
+          delBtn.classList.add('hidden');
+        }
+        toggleModal('modal-emp', true);
+      }
+
+      function toggleModal(id, open) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (open) {
+          el.classList.remove('hidden');
+          el.classList.add('flex');
+        } else {
+          el.classList.add('hidden');
+          el.classList.remove('flex');
+        }
+      }
+
+      // ==================== EXPORT & COPY ====================
+      function exportXLSX() {
+        if (typeof XLSX === 'undefined') {
+          showToast('Biblioteca Excel indisponível no momento. Recarregue a página e tente novamente.');
+          return;
+        }
+        const rule = PHASE_RULES[state.config.phase] || PHASE_RULES.fase1_42h;
+        const headers = ['Funcionário', 'Cargo', ...DAYS, 'Horas Semanais', 'Dias DSR', 'Status'];
+        const dailyCounts = [0, 0, 0, 0, 0, 0, 0];
+        const allAlerts = [];
+
+        const rows = state.employees.map(emp => {
+          const audit = validateEmployee(emp);
+          audit.issues.forEach(issue => {
+            allAlerts.push([emp.name, issue.level === 'error' ? 'Irregularidade' : 'Atenção', issue.text]);
+          });
+          const dayCols = emp.schedule.map((c, idx) => {
+            if (c === 'DSR') return 'DSR (Folga)';
+            dailyCounts[idx]++;
+            const s = getShiftById(c);
+            return s ? `${s.code} (${s.start}-${s.end})` : c;
+          });
+          const statusTxt = audit.status === 'ok' ? 'Conforme' : (audit.status === 'warn' ? 'Atenção' : 'Irregular');
+          return [emp.name, emp.role, ...dayCols, formatHours(audit.totalHours), audit.dsrCount, statusTxt];
+        });
+
+        const coverageRow = ['Cobertura Diária', `Meta: ${state.config.minCoverage}/dia`, ...dailyCounts, '', '', ''];
+        const sheet1Data = [
+          [`Escala Semanal — ${rule.label} (EC 141/2026 & CLT)`],
+          [],
+          headers,
+          ...rows,
+          [],
+          coverageRow
+        ];
+
+        const wb = XLSX.utils.book_new();
+        const wsEscala = XLSX.utils.aoa_to_sheet(sheet1Data);
+        wsEscala['!cols'] = [
+          { wch: 24 }, { wch: 18 },
+          { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 },
+          { wch: 15 }, { wch: 10 }, { wch: 13 }
+        ];
+        XLSX.utils.book_append_sheet(wb, wsEscala, 'Escala Semanal');
+
+        const shiftRows = state.shifts.map(sh => {
+          const m = calcShiftMetrics(sh);
+          return [sh.code, sh.name, sh.start, sh.end, sh.breakMin, formatHours(m.payableHours)];
+        });
+        const wsTurnos = XLSX.utils.aoa_to_sheet([
+          ['Sigla', 'Nome do Turno', 'Entrada', 'Saída', 'Intervalo (min)', 'Jornada Computada'],
+          ...shiftRows
+        ]);
+        wsTurnos['!cols'] = [{ wch: 10 }, { wch: 22 }, { wch: 10 }, { wch: 10 }, { wch: 16 }, { wch: 18 }];
+        XLSX.utils.book_append_sheet(wb, wsTurnos, 'Turnos');
+
+        const auditRows = allAlerts.length > 0
+          ? allAlerts
+          : [['Equipe', 'Conforme', 'Nenhuma irregularidade encontrada conforme EC nº 141/2026 e CLT.']];
+        const wsAudit = XLSX.utils.aoa_to_sheet([
+          ['Funcionário', 'Nível', 'Detalhamento Legal'],
+          ...auditRows
+        ]);
+        wsAudit['!cols'] = [{ wch: 24 }, { wch: 16 }, { wch: 70 }];
+        XLSX.utils.book_append_sheet(wb, wsAudit, 'Auditoria');
+
+        XLSX.writeFile(wb, `escala_5x2_${state.config.phase}.xlsx`);
+        showToast('Planilha Excel (.xlsx) exportada com sucesso.');
+      }
+
+      function copySummary() {
+        const rule = PHASE_RULES[state.config.phase];
+        const lines = [`ESCALA SEMANAL — ${rule.label} (EC 141/2026 & CLT)`, ''];
+        state.employees.forEach(emp => {
+          const audit = validateEmployee(emp);
+          const schedTxt = emp.schedule.map((c, i) => `${DAYS[i]}:${c}`).join(' | ');
+          lines.push(`${emp.name} (${emp.role}) — ${formatHours(audit.totalHours)} · ${audit.dsrCount} DSR`);
+          lines.push(`  ${schedTxt}`);
+        });
+        const text = lines.join('\n');
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => showToast('Resumo copiado para a área de transferência.')).catch(() => fallbackCopy(text));
+        } else {
+          fallbackCopy(text);
+        }
+      }
+
+      function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); showToast('Resumo copiado para a área de transferência.'); }
+        catch (e) { showToast('Não foi possível copiar automaticamente.'); }
+        document.body.removeChild(ta);
+      }
+
+      function showToast(message) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast-enter pointer-events-auto bg-slate-900 text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2';
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3200);
+      }
+
+      function escapeHtml(str) {
+        return String(str || '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+      }
+
+      // ==================== EVENT LISTENERS ====================
+      function bindEvents() {
+        // Tabs
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-tab');
+            state.activeTab = target;
+            document.querySelectorAll('.tab-btn').forEach(b => b.setAttribute('aria-selected', b === btn ? 'true' : 'false'));
+            ['escala', 'turnos', 'simulador', 'guia'].forEach(id => {
+              document.getElementById(`panel-${id}`).classList.toggle('hidden', id !== target);
+            });
+            saveState();
+            if (target === 'escala') renderScheduleTab();
+            if (target === 'simulador') renderSimulatorTab();
+            if (window.lucide) window.lucide.createIcons();
+          });
+        });
+
+        // Config controls
+        document.getElementById('cfg-phase').addEventListener('change', e => {
+          state.config.phase = e.target.value;
+          saveState();
+          renderAll();
+        });
+        document.getElementById('cfg-operation').addEventListener('change', e => {
+          state.config.operationMode = e.target.value;
+          saveState();
+          renderAll();
+        });
+        document.getElementById('cfg-coverage').addEventListener('input', e => {
+          state.config.minCoverage = parseInt(e.target.value, 10) || 1;
+          saveState();
+          renderAll();
+        });
+        document.getElementById('cfg-cct').addEventListener('change', e => {
+          state.config.hasCCT = e.target.checked;
+          saveState();
+          renderAll();
+        });
+
+        // Top action buttons
+        document.getElementById('btn-auto-generate').addEventListener('click', autoGenerateSchedule);
+        document.getElementById('btn-add-emp').addEventListener('click', () => openEmpModal(null));
+        document.getElementById('btn-export-xlsx').addEventListener('click', exportXLSX);
+        document.getElementById('btn-copy-summary').addEventListener('click', copySummary);
+
+        // Delegated clicks on schedule table
+        document.getElementById('schedule-tbody').addEventListener('click', e => {
+          const btn = e.target.closest('button[data-action]');
+          if (!btn) return;
+          const action = btn.getAttribute('data-action');
+          const empId = btn.getAttribute('data-emp');
+          if (action === 'edit-cell') {
+            openCellModal(empId, parseInt(btn.getAttribute('data-day'), 10));
+          } else if (action === 'edit-emp') {
+            openEmpModal(empId);
+          }
+        });
+
+        // Cell modal shift pick
+        document.getElementById('mc-options').addEventListener('click', e => {
+          const btn = e.target.closest('button[data-pick-shift]');
+          if (!btn || !editingCell) return;
+          const emp = state.employees.find(x => x.id === editingCell.empId);
+          if (emp) {
+            emp.schedule[editingCell.dayIdx] = btn.getAttribute('data-pick-shift');
+            saveState();
+            renderAll();
+          }
+          toggleModal('modal-cell', false);
+        });
+
+        // Close modal buttons
+        document.querySelectorAll('[data-close-modal]').forEach(btn => {
+          btn.addEventListener('click', () => toggleModal(btn.getAttribute('data-close-modal'), false));
+        });
+
+        // Employee form submit & delete
+        document.getElementById('emp-form').addEventListener('submit', e => {
+          e.preventDefault();
+          const id = document.getElementById('ef-id').value;
+          const name = document.getElementById('ef-name').value.trim();
+          const role = document.getElementById('ef-role').value.trim();
+          const salary = Math.max(0, Number(document.getElementById('ef-salary').value) || 0);
+          const exemptArt8 = document.getElementById('ef-art8').checked;
+          const defShift = document.getElementById('ef-default-shift').value || 'COM8';
+          if (!name) return;
+
+          if (id) {
+            const emp = state.employees.find(x => x.id === id);
+            if (emp) {
+              emp.name = name;
+              emp.role = role;
+              emp.salary = salary;
+              emp.exemptArt8 = exemptArt8;
+            }
+            showToast(`Dados de ${name} atualizados.`);
+          } else {
+            state.employees.push({
+              id: 'e_' + Date.now(),
+              name,
+              role: role || 'Colaborador',
+              salary,
+              exemptArt8,
+              schedule: [defShift, defShift, defShift, defShift, defShift, 'DSR', 'DSR']
+            });
+            showToast(`${name} adicionado(a) à escala.`);
+          }
+          saveState();
+          renderAll();
+          toggleModal('modal-emp', false);
+        });
+
+        document.getElementById('btn-delete-emp').addEventListener('click', () => {
+          const id = document.getElementById('ef-id').value;
+          if (!id) return;
+          state.employees = state.employees.filter(x => x.id !== id);
+          saveState();
+          renderAll();
+          toggleModal('modal-emp', false);
+          showToast('Funcionário removido da escala.');
+        });
+
+        // Shift form preview & submit
+        ['sf-start', 'sf-end', 'sf-break'].forEach(id => {
+          document.getElementById(id).addEventListener('input', updateShiftFormPreview);
+        });
+
+        document.getElementById('btn-reset-shift-form').addEventListener('click', () => {
+          document.getElementById('sf-id').value = '';
+          document.getElementById('sf-name').value = '';
+          document.getElementById('sf-code').value = '';
+          document.getElementById('sf-start').value = '08:00';
+          document.getElementById('sf-end').value = '17:00';
+          document.getElementById('sf-break').value = 60;
+          document.getElementById('sf-color').value = 'emerald';
+          document.getElementById('shift-form-title').textContent = 'Criar / Editar Turno';
+          updateShiftFormPreview();
+        });
+
+        document.getElementById('shift-form').addEventListener('submit', e => {
+          e.preventDefault();
+          const id = document.getElementById('sf-id').value;
+          const name = document.getElementById('sf-name').value.trim();
+          const code = document.getElementById('sf-code').value.trim().toUpperCase();
+          const start = document.getElementById('sf-start').value;
+          const end = document.getElementById('sf-end').value;
+          const breakMin = Math.max(0, parseInt(document.getElementById('sf-break').value, 10) || 0);
+          const color = document.getElementById('sf-color').value;
+          if (!name || !code) return;
+
+          if (id) {
+            const existing = getShiftById(id);
+            if (existing) {
+              existing.name = name;
+              existing.code = code;
+              existing.start = start;
+              existing.end = end;
+              existing.breakMin = breakMin;
+              existing.color = color;
+            }
+            showToast(`Turno ${code} atualizado.`);
+          } else {
+            state.shifts.push({
+              id: 'S_' + Date.now(),
+              code,
+              name,
+              start,
+              end,
+              breakMin,
+              color
+            });
+            showToast(`Turno ${code} criado.`);
+          }
+          document.getElementById('btn-reset-shift-form').click();
+          saveState();
+          renderAll();
+        });
+
+        // Delegated clicks on shifts list
+        document.getElementById('shifts-list').addEventListener('click', e => {
+          const btn = e.target.closest('button[data-action]');
+          if (!btn) return;
+          const action = btn.getAttribute('data-action');
+          const shiftId = btn.getAttribute('data-shift');
+          const shift = getShiftById(shiftId);
+          if (!shift) return;
+
+          if (action === 'edit-shift') {
+            document.getElementById('sf-id').value = shift.id;
+            document.getElementById('sf-name').value = shift.name;
+            document.getElementById('sf-code').value = shift.code;
+            document.getElementById('sf-start').value = shift.start;
+            document.getElementById('sf-end').value = shift.end;
+            document.getElementById('sf-break').value = shift.breakMin;
+            document.getElementById('sf-color').value = shift.color;
+            document.getElementById('shift-form-title').textContent = `Editando Turno: ${shift.code}`;
+            updateShiftFormPreview();
+          } else if (action === 'delete-shift') {
+            if (state.shifts.length <= 1) {
+              showToast('Mantenha pelo menos 1 turno cadastrado.');
+              return;
+            }
+            state.shifts = state.shifts.filter(s => s.id !== shiftId);
+            state.employees.forEach(emp => {
+              emp.schedule = emp.schedule.map(c => c === shiftId ? 'DSR' : c);
+            });
+            saveState();
+            renderAll();
+            showToast(`Turno ${shift.code} excluído.`);
+          }
+        });
+
+        // Simulator inputs
+        document.getElementById('sim-salary').addEventListener('input', e => {
+          state.config.simSalary = Math.max(0, Number(e.target.value) || 0);
+          saveState();
+          renderSimulatorTab();
+        });
+        document.getElementById('sim-inss').addEventListener('input', e => {
+          state.config.inssRate = Math.max(0, Number(e.target.value) || 0);
+          saveState();
+          renderSimulatorTab();
+        });
+        document.getElementById('sim-rat').addEventListener('input', e => {
+          state.config.ratRate = Math.max(0, Number(e.target.value) || 0);
+          saveState();
+          renderSimulatorTab();
+        });
+      }
+
+      function initAdSense() {
+        const cfg = window.SITE_CONFIG || {};
+        if (!cfg.adsenseClient) return;
+        const sc = document.createElement('script');
+        sc.async = true;
+        sc.crossOrigin = 'anonymous';
+        sc.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(cfg.adsenseClient);
+        document.head.appendChild(sc);
+        document.body.classList.add('ads-on');
+        document.querySelectorAll('ins.adsbygoogle').forEach(slot => {
+          const slotId = (cfg.slots || {})[slot.getAttribute('data-ad-key')];
+          if (!slotId) { const c = slot.closest('.ad-container'); if (c) c.style.display = 'none'; return; }
+          slot.setAttribute('data-ad-client', cfg.adsenseClient);
+          slot.setAttribute('data-ad-slot', slotId);
+          try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) {}
+        });
+      }
+
+      // Initialize
+      bindEvents();
+      renderAll();
+      initAdSense();
+    })();
+  </script>
+</body>
+</html>
