@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Planejador gratuito de escala 5x2 com auditoria em tempo real da EC 141/2026 e da CLT: grade semanal, turnos, salário-hora (divisores 220/210/200) e exportação para Excel.">
+    <meta name="description" content="Planejador gratuito de escala 5x2 com auditoria em tempo real da EC 141/2026, do Decreto 13.173/2026 e da CLT: grade semanal, turnos, salário-hora (divisores 220/210/200), regimes especiais e exportação para Excel.">
   <meta name="robots" content="index,follow">
   <script>
     /* Preencha após a aprovação no AdSense. Com client vazio, nenhum anúncio é carregado e os espaços ficam ocultos. */
@@ -12,7 +12,7 @@
       slots: { TOPO: "", CENTRO: "", RODAPE: "", LATERAL_ESQ: "", LATERAL_DIR: "" }
     };
   </script>
-  <title>Planejador de Jornadas 5x2 (EC 141/2026 &amp; CLT) | Escala 5x2 Brasil</title>
+  <title>Planejador de Jornadas 5x2 (EC 141/2026, Decreto 13.173/2026 &amp; CLT) | Escala 5x2 Brasil</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
@@ -64,7 +64,7 @@
           <div>
             <div class="flex items-center gap-2 flex-wrap">
               <a href="index.html" class="text-base sm:text-lg font-bold tracking-tight text-slate-900"><h1 class="inline">Escala 5x2 Brasil</h1></a>
-              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">EC nº 141/2026 &amp; CLT</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">EC 141/2026 · Decreto 13.173/2026</span>
             </div>
             <p class="text-xs text-slate-500 hidden sm:block">Planejador de escalas trabalhistas com auditoria legal em tempo real</p>
           </div>
@@ -158,7 +158,7 @@
             <select id="cfg-phase" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
               <option value="fase1_42h">EC 141 — Fase 1 Transição (42h/sem · dez/2026)</option>
               <option value="fase2_40h">EC 141 — Fase 2 Definitiva (40h/sem · dez/2027)</option>
-              <option value="compensatorio">EC 141 — Regime Compensatório (40h · §2º)</option>
+              <option value="compensatorio">EC 141 — Regime Compensatório de DSR (§ 2º) — 42h na transição</option>
               <option value="picea_4x3">PL 4478/2024 — Simulação 4x3 (36h/sem)</option>
             </select>
           </div>
@@ -305,7 +305,7 @@
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-sm font-semibold text-slate-900">Auditoria Trabalhista em Tempo Real</h3>
-              <p class="text-xs text-slate-500">Verificação automática de EC 141/2026 e CLT</p>
+              <p class="text-xs text-slate-500">Verificação automática de EC 141/2026, Decreto 13.173/2026 e CLT</p>
             </div>
             <span id="audit-count-badge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700">Tudo certo</span>
           </div>
@@ -407,7 +407,7 @@
           <div class="space-y-2.5" id="sim-hourly-cards"></div>
 
           <p class="text-[11px] text-slate-500 leading-relaxed">
-            Pelo Art. 2º da EC nº 141/2026, a diminuição da jornada (44h → 42h → 40h) e o incremento do DSR para 2 dias aplicam-se aos contratos em vigor <strong>sem qualquer redução salarial</strong>, inclusive aos pisos salariais.
+            Pelo Art. 2º da EC nº 141/2026, a diminuição da jornada (44h → 42h → 40h) e o incremento do DSR para 2 dias aplicam-se aos contratos em vigor <strong>sem qualquer redução salarial</strong>, inclusive aos pisos salariais. O Decreto nº 13.173/2026 (Art. 5º, parágrafo único) ressalva que o divisor legal não afasta divisor inferior previsto em lei, ACT/CCT ou jornada contratual menor, prevalecendo o mais favorável ao empregado.
           </p>
         </div>
 
@@ -468,12 +468,12 @@
           <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <div class="text-xs font-bold uppercase tracking-wider text-slate-500">16 de Outubro de 2026</div>
             <div class="mt-1 text-sm font-bold text-slate-900">Publicação da EC nº 141/2026</div>
-            <p class="mt-1.5 text-xs text-slate-600 leading-relaxed">Vigência imediata dos dispositivos gerais (Art. 10, II), irredutibilidade salarial (Art. 2º) e início do prazo de adaptação de 2 meses para cláusulas coletivas.</p>
+            <p class="mt-1.5 text-xs text-slate-600 leading-relaxed">Vigência imediata dos dispositivos gerais (Art. 10, II), irredutibilidade salarial (Art. 2º) e início do prazo de 2 meses para as cláusulas coletivas incompatíveis perderem efeito (Art. 3º).</p>
           </div>
           <div class="rounded-xl border border-emerald-300 bg-emerald-50 p-4">
             <div class="text-xs font-bold uppercase tracking-wider text-emerald-700">16 de Dezembro de 2026 (Fase 1)</div>
             <div class="mt-1 text-sm font-bold text-emerald-950">Limite de 42h/sem + 2 Dias de DSR</div>
-            <p class="mt-1.5 text-xs text-emerald-900 leading-relaxed">Passa a valer o repouso semanal remunerado de 2 dias (1 preferencialmente domingo) e teto semanal de 42h (Art. 6º, I e Art. 10, I). ACT/CCT podem ampliar a jornada diária para distribuir as 42h (Art. 7º).</p>
+            <p class="mt-1.5 text-xs text-emerald-900 leading-relaxed">Passa a valer o repouso semanal remunerado de 2 dias (1 preferencialmente domingo), com vigência pelo Art. 10, I, e o teto semanal de 42h (Art. 6º, I). ACT/CCT podem ampliar a jornada diária para distribuir as 42h (Art. 7º).</p>
           </div>
           <div class="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
             <div class="text-xs font-bold uppercase tracking-wider text-indigo-700">16 de Dezembro de 2027 (Fase 2)</div>
@@ -492,10 +492,12 @@
           </div>
         </div>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><strong class="text-slate-900">Salário-hora:</strong> divisor 210 para 42h e divisor 200 para 40h (antes, 220). Exemplo oficial: R$ 3.000 passa de R$ 13,64/h para R$ 14,29/h e depois R$ 15,00/h.</li>
-          <li><strong class="text-slate-900">Regimes especiais:</strong> turnos ininterruptos de revezamento mantêm 6h diárias, salvo ACT/CCT; na 12x36, média mensal acima do limite exige compensação ou horas extras.</li>
-          <li><strong class="text-slate-900">Exclusão:</strong> não vale para empregados públicos da administração direta e indireta.</li>
-          <li><strong class="text-slate-900">Próximos passos:</strong> o MTE vai editar portarias complementares. Consulte-as antes de aplicar regimes especiais.</li>
+          <li><strong class="text-slate-900">Âmbito:</strong> empregados urbanos, rurais, domésticos e, no que couber, trabalhadores avulsos (Art. 1º, parágrafo único).</li>
+          <li><strong class="text-slate-900">Salário-hora:</strong> divisor 210 para 42h e divisor 200 para 40h (Art. 5º). O parágrafo único preserva divisor inferior previsto em lei, ACT/CCT ou jornada contratual menor, prevalecendo o mais favorável ao empregado. Exemplo oficial: R$ 3.000 passa de R$ 13,64/h para R$ 14,29/h e depois R$ 15,00/h.</li>
+          <li><strong class="text-slate-900">Turnos ininterruptos:</strong> 6h diárias, salvo ACT/CCT; a média mensal deve respeitar o limite semanal (42h/40h), assegurados os 2 dias de DSR (Art. 2º).</li>
+          <li><strong class="text-slate-900">12x36:</strong> compensação ou horas extras quando a média mensal superar o limite semanal, nos termos da negociação coletiva (Art. 3º).</li>
+          <li><strong class="text-slate-900">Regulamentação complementar:</strong> ato do MTE disporá sobre o repouso semanal (Lei nº 605/1949) e os regimes especiais (Art. 4º; Art. 7º, § 3º, da CF).</li>
+          <li><strong class="text-slate-900">Art. 8º da EC:</strong> a dispensa de controle de jornada não se aplica a empregados públicos da administração direta e indireta (Art. 8º, § 1º).</li>
         </ul>
       </div>
 
@@ -509,7 +511,7 @@
           <ul class="space-y-2.5 text-xs text-slate-600">
             <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">Art. 7º, XIII:</span><span>Duração normal máxima de 8h diárias e 40h semanais (42h na transição), facultada compensação via ACT/CCT.</span></li>
             <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">Art. 7º, XV:</span><span>Repouso semanal remunerado (DSR) de 2 dias, um dos quais preferencialmente aos domingos.</span></li>
-            <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">Art. 7º, § 2º:</span><span>ACT/CCT podem prever regime compensatório com média de 2 dias de DSR no mês-calendário, garantido mínimo de 1 dia dentro de cada semana.</span></li>
+            <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">Art. 7º, § 2º:</span><span>ACT/CCT podem prever regime compensatório com média de 2 dias de DSR no mês-calendário, garantido o gozo de pelo menos 1 dia dentro do período máximo de uma semana de trabalho.</span></li>
             <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">Art. 2º:</span><span>Irredutibilidade salarial absoluta (nominal, proporcional ou de pisos) na migração dos contratos vigentes.</span></li>
             <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">Art. 4º:</span><span>Jornadas já iguais ou inferiores a 40h não sofrem redução proporcional, mas mantêm o direito aos 2 dias de DSR.</span></li>
             <li class="flex gap-2"><span class="font-bold text-slate-900 shrink-0">Art. 8º:</span><span>Empregado com nível superior e salário ≥ 2,5x teto do RGPS fica dispensado do controle de jornada (salvo liberalidade ou ACT/CCT), preservados os 2 dias de DSR. Não se aplica a empregados públicos da administração direta e indireta (§ 1º).</span></li>
@@ -559,8 +561,8 @@
   <footer class="site-footer no-print border-t border-slate-200 bg-white mt-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-xs text-slate-500 space-y-3">
       <nav class="flex flex-wrap gap-x-5 gap-y-1" aria-label="Rodapé"><a href="index.html" class="text-emerald-700 font-semibold whitespace-nowrap" aria-current="page">Planejador</a><a href="guia-ec-141-escala-5x2.html" class="text-slate-600 hover:text-slate-900 whitespace-nowrap">Guia da EC 141</a><a href="sobre.html" class="text-slate-600 hover:text-slate-900 whitespace-nowrap">Sobre e contato</a><a href="privacidade.html" class="text-slate-600 hover:text-slate-900 whitespace-nowrap">Privacidade</a><a href="termos.html" class="text-slate-600 hover:text-slate-900 whitespace-nowrap">Termos de Uso</a></nav>
-      <p><strong class="text-slate-700">Aviso legal:</strong> ferramenta informativa e de simulação. Não substitui a análise de advogado trabalhista, contador ou do sindicato da categoria, nem a consulta aos textos oficiais (<a href="https://www.planalto.gov.br/ccivil_03/constituicao/emendas/emc/emc141.htm" target="_blank" rel="noopener" class="underline">EC 141/2026</a>, Decreto 13.173/2026 e portarias do MTE). O PL 4478/2024 (PICEA) é projeto em tramitação e não é lei.</p>
-      <p>© 2026 Escala 5x2 Brasil · Conteúdo legal revisado em 20/11/2026.</p>
+      <p><strong class="text-slate-700">Aviso legal:</strong> ferramenta informativa e de simulação. Não substitui a análise de advogado trabalhista, contador ou do sindicato da categoria, nem a consulta aos textos oficiais (<a href="https://www.planalto.gov.br/ccivil_03/constituicao/emendas/emc/emc141.htm" target="_blank" rel="noopener" class="underline">EC 141/2026</a>, <a href="https://www.in.gov.br/web/dou/-/decreto-n-13.173-de-19-de-novembro-de-2026-745538217" target="_blank" rel="noopener" class="underline">Decreto 13.173/2026</a> e portarias do MTE). O PL 4478/2024 (PICEA) é projeto em tramitação e não é lei.</p>
+      <p>© 2026 Escala 5x2 Brasil · Conteúdo legal revisado em 24/11/2026.</p>
     </div>
   </footer>
 
@@ -667,12 +669,12 @@
           banner: '<strong>Fase 2 Definitiva (a partir de 16/12/2027):</strong> Teto constitucional de <strong>8h diárias</strong>, <strong>40h semanais</strong> e <strong>2 dias de DSR</strong> (um preferencialmente aos domingos), sem redução salarial (Art. 7º, XIII e XV CF; Art. 6º, II da EC 141/2026).'
         },
         compensatorio: {
-          label: 'Regime Compensatório (§ 2º)',
-          maxWeekly: 40,
+          label: 'Regime Compensatório de DSR (§ 2º) — 42h',
+          maxWeekly: 42,
           normalDailyNoCCT: 8,
-          normalDailyWithCCT: 8,
+          normalDailyWithCCT: 8.4, // 8h24 * 5 = 42h (Art. 7º EC 141/2026)
           minDSR: 1,
-          banner: '<strong>Regime Compensatório Mensal (Art. 7º, § 2º CF — EC 141/2026):</strong> Excepcionalmente via ACT/CCT, permite assegurar <strong>média de 2 dias de DSR no mês-calendário</strong>, desde que garantido <strong>pelo menos 1 dia de DSR</strong> dentro de cada semana de trabalho.'
+          banner: '<strong>Regime Compensatório de DSR (Art. 7º, § 2º CF — EC 141/2026):</strong> Excepcionalmente via ACT/CCT, permite assegurar <strong>média de 2 dias de DSR no mês-calendário</strong>, desde que garantido <strong>pelo menos 1 dia de DSR</strong> dentro do período máximo de uma semana de trabalho. O limite semanal continua sendo o da fase em vigor: <strong>42h até 16/12/2027</strong> e <strong>40h a partir de 16/12/2027</strong>.'
         },
         picea_4x3: {
           label: 'Simulação 4x3 (PL 4478/2024)',
@@ -812,6 +814,13 @@
         let sundayDSR = emp.schedule[6] === 'DSR';
         const issues = []; // { level: 'error'|'warn', text: string }
 
+        if (state.config.phase === 'compensatorio' && !state.config.hasCCT) {
+          issues.push({
+            level: 'error',
+            text: 'O regime compensatório do art. 7º, § 2º, da CF exige previsão em acordo ou convenção coletiva. Ative o ACT/CCT.'
+          });
+        }
+
         for (let d = 0; d < 7; d++) {
           const cell = emp.schedule[d];
           if (cell === 'DSR') {
@@ -945,7 +954,7 @@
 
         // Pick best default shift for this phase
         let primaryShiftId = 'COM8';
-        if (phase === 'fase1_42h' && state.config.hasCCT && getShiftById('TRA824')) {
+        if ((phase === 'fase1_42h' || phase === 'compensatorio') && state.config.hasCCT && getShiftById('TRA824')) {
           primaryShiftId = 'TRA824';
         } else if (getShiftById('COM8')) {
           primaryShiftId = 'COM8';
@@ -957,7 +966,7 @@
           // Keep employee's most common non-DSR shift if valid, else use primaryShiftId
           const existingShifts = emp.schedule.filter(c => c !== 'DSR' && getShiftById(c));
           let chosenShift = existingShifts.length > 0 ? existingShifts[0] : primaryShiftId;
-          if (phase === 'fase1_42h' && state.config.hasCCT && chosenShift === 'COM8' && getShiftById('TRA824')) {
+          if ((phase === 'fase1_42h' || phase === 'compensatorio') && state.config.hasCCT && chosenShift === 'COM8' && getShiftById('TRA824')) {
             chosenShift = 'TRA824';
           }
           if (phase === 'fase2_40h' && chosenShift === 'TRA824' && getShiftById('COM8')) {
@@ -1165,7 +1174,7 @@
         if (allAlerts.length === 0) {
           alertsList.innerHTML = `<div class="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-xs text-emerald-800 flex items-center gap-2.5">
             <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 shrink-0"></i>
-            <span>Nenhuma irregularidade encontrada. Todas as jornadas, intervalos e dias de DSR respeitam a EC nº 141/2026 e a CLT.</span>
+            <span>Nenhuma irregularidade encontrada. Todas as jornadas, intervalos e dias de DSR respeitam a EC nº 141/2026, o Decreto nº 13.173/2026 e a CLT.</span>
           </div>`;
         } else {
           // Errors first, then warnings
@@ -1494,7 +1503,7 @@
 
         const coverageRow = ['Cobertura Diária', `Meta: ${state.config.minCoverage}/dia`, ...dailyCounts, '', '', ''];
         const sheet1Data = [
-          [`Escala Semanal — ${rule.label} (EC 141/2026 & CLT)`],
+          [`Escala Semanal — ${rule.label} (EC 141/2026, Decreto 13.173/2026 & CLT)`],
           [],
           headers,
           ...rows,
@@ -1524,7 +1533,7 @@
 
         const auditRows = allAlerts.length > 0
           ? allAlerts
-          : [['Equipe', 'Conforme', 'Nenhuma irregularidade encontrada conforme EC nº 141/2026 e CLT.']];
+          : [['Equipe', 'Conforme', 'Nenhuma irregularidade encontrada conforme EC nº 141/2026, Decreto nº 13.173/2026 e CLT.']];
         const wsAudit = XLSX.utils.aoa_to_sheet([
           ['Funcionário', 'Nível', 'Detalhamento Legal'],
           ...auditRows
@@ -1538,7 +1547,7 @@
 
       function copySummary() {
         const rule = PHASE_RULES[state.config.phase];
-        const lines = [`ESCALA SEMANAL — ${rule.label} (EC 141/2026 & CLT)`, ''];
+        const lines = [`ESCALA SEMANAL — ${rule.label} (EC 141/2026, Decreto 13.173/2026 & CLT)`, ''];
         state.employees.forEach(emp => {
           const audit = validateEmployee(emp);
           const schedTxt = emp.schedule.map((c, i) => `${DAYS[i]}:${c}`).join(' | ');
