@@ -1,2 +1,1 @@
-# ads.txt do Google AdSense
 google.com, pub-7340154535854301, DIRECT, f08c47fec0942fa0
