@@ -4,7 +4,7 @@
    e cole os IDs em TOPO e BASE. Enquanto um slot estiver vazio, o bloco correspondente
    fica oculto (sem espaço em branco). */
 window.SITE_CONFIG = {
-  adsenseClient: 'ca-pub-7340154535854301',
+  adsenseClient: 'ca-pub-7340154536584301',
   slots: {
     TOPO: '',  // ex.: '1234567890'
     BASE: ''   // ex.: '0987654321'
