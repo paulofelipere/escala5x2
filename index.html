@@ -5,13 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Planejador gratuito de escala 5x2 com auditoria em tempo real da EC 141/2026, do Decreto 13.173/2026 e da CLT: grade semanal, turnos, salário-hora (divisores 220/210/200), regimes especiais e exportação para Excel.">
   <meta name="robots" content="index,follow">
-  <script>
-    /* Preencha após a aprovação no AdSense. Com client vazio, nenhum anúncio é carregado e os espaços ficam ocultos. */
-    window.SITE_CONFIG = {
-      adsenseClient: "",  // ex.: "ca-pub-1234567890123456"
-      slots: { TOPO: "", CENTRO: "", RODAPE: "", LATERAL_ESQ: "", LATERAL_DIR: "" }
-    };
-  </script>
+  <!-- Google AdSense: verificação do site -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7340154535854301"
+          crossorigin="anonymous"></script>
   <title>Planejador de Jornadas 5x2 (EC 141/2026, Decreto 13.173/2026 &amp; CLT) | Escala 5x2 Brasil</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -19,8 +15,7 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     .ad-container { display: none; }
-    body.ads-on .ad-container:not(aside) { display: block; }
-    @media (min-width: 1280px) { body.ads-on aside.ad-container { display: block; } }
+    body.ads-on .ad-container { display: block; }
     .site-footer a:hover { color: #047857; }
     body {
       font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -97,31 +92,19 @@
     <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap gap-x-5 gap-y-1 text-xs" aria-label="Páginas do site"><a href="index.html" class="text-emerald-700 font-semibold whitespace-nowrap" aria-current="page">Planejador</a><a href="guia-ec-141-escala-5x2.html" class="text-slate-600 hover:text-slate-900 whitespace-nowrap">Guia da EC 141</a><a href="sobre.html" class="text-slate-600 hover:text-slate-900 whitespace-nowrap">Sobre e contato</a><a href="privacidade.html" class="text-slate-600 hover:text-slate-900 whitespace-nowrap">Privacidade</a><a href="termos.html" class="text-slate-600 hover:text-slate-900 whitespace-nowrap">Termos de Uso</a></nav>
   </div>
 
-  <!-- Google AdSense: Banner Topo (728x90 / Responsivo) -->
-  <div class="max-w-[1640px] mx-auto px-4 pt-4 no-print ad-container" aria-label="Espaço publicitário superior">
-    <div class="max-w-[728px] mx-auto min-h-[90px] rounded-xl  flex flex-col items-center justify-center p-2 text-center relative overflow-hidden">
+  <!-- Google AdSense: Anúncio 1 de 2 — Banner superior (responsivo) -->
+  <div class="max-w-[728px] mx-auto px-4 pt-4 no-print ad-container" aria-label="Espaço publicitário superior">
+    <div class="min-h-[90px] rounded-xl flex flex-col items-center justify-center p-2 text-center relative overflow-hidden">
       <ins class="adsbygoogle"
            style="display:block;width:100%;"
-           data-ad-client=""
+           data-ad-client="ca-pub-7340154535854301"
            data-ad-key="TOPO"
            data-ad-format="auto"
            data-full-width-responsive="true"></ins>
     </div>
   </div>
 
-  <!-- Layout 3 colunas: Lateral Esquerda AdSense + Conteúdo Principal + Lateral Direita AdSense -->
-  <div class="max-w-[1640px] mx-auto px-4 py-5 flex items-start justify-center gap-5">
-    <!-- Google AdSense: Lateral Esquerda (160x600 Sticky) -->
-    <aside aria-label="Espaço publicitário lateral esquerdo" class="hidden xl:block w-[160px] shrink-0 sticky top-20 no-print ad-container">
-      <div class="min-h-[600px] rounded-xl  flex flex-col items-center justify-center p-3 text-center">
-        <ins class="adsbygoogle"
-             style="display:block;width:160px;height:600px;"
-             data-ad-client=""
-             data-ad-key="LATERAL_ESQ"></ins>
-      </div>
-    </aside>
-
-    <main class="flex-1 min-w-0 max-w-7xl space-y-6">
+  <main class="max-w-7xl mx-auto px-4 py-5 space-y-6">
     <!-- ==================== TAB 1: MONTAR ESCALA ==================== -->
     <section id="panel-escala" class="space-y-6">
       <!-- Legal & Shift Configuration Bar -->
@@ -285,18 +268,6 @@
               <tfoot id="schedule-tfoot" class="bg-slate-50 border-t border-slate-200 text-xs font-semibold"></tfoot>
             </table>
           </div>
-        </div>
-      </div>
-
-      <!-- Google AdSense: Banner Centro (728x90 / Responsivo) -->
-      <div class="no-print ad-container" aria-label="Espaço publicitário central">
-        <div class="max-w-[728px] mx-auto min-h-[90px] rounded-xl  flex flex-col items-center justify-center p-2 text-center relative overflow-hidden">
-          <ins class="adsbygoogle"
-               style="display:block;width:100%;"
-               data-ad-client=""
-               data-ad-key="CENTRO"
-               data-ad-format="auto"
-               data-full-width-responsive="true"></ins>
         </div>
       </div>
 
@@ -552,28 +523,18 @@
         </div>
       </div>
     </section>
-      <!-- Google AdSense: Banner Rodapé / Abaixo (728x90 / Responsivo) -->
-      <div class="pt-2 no-print ad-container" aria-label="Espaço publicitário inferior">
-        <div class="max-w-[728px] mx-auto min-h-[90px] rounded-xl  flex flex-col items-center justify-center p-2 text-center relative overflow-hidden">
-          <ins class="adsbygoogle"
-               style="display:block;width:100%;"
-               data-ad-client=""
-               data-ad-key="RODAPE"
-               data-ad-format="auto"
-               data-full-width-responsive="true"></ins>
-        </div>
-      </div>
-    </main>
+  </main>
 
-    <!-- Google AdSense: Lateral Direita (160x600 Sticky) -->
-    <aside aria-label="Espaço publicitário lateral direito" class="hidden xl:block w-[160px] shrink-0 sticky top-20 no-print ad-container">
-      <div class="min-h-[600px] rounded-xl  flex flex-col items-center justify-center p-3 text-center">
-        <ins class="adsbygoogle"
-             style="display:block;width:160px;height:600px;"
-             data-ad-client=""
-             data-ad-key="LATERAL_DIR"></ins>
-      </div>
-    </aside>
+  <!-- Google AdSense: Anúncio 2 de 2 — Banner inferior (responsivo) -->
+  <div class="max-w-[728px] mx-auto px-4 pb-6 no-print ad-container" aria-label="Espaço publicitário inferior">
+    <div class="min-h-[90px] rounded-xl flex flex-col items-center justify-center p-2 text-center relative overflow-hidden">
+      <ins class="adsbygoogle"
+           style="display:block;width:100%;"
+           data-ad-client="ca-pub-7340154535854301"
+           data-ad-key="BASE"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+    </div>
   </div>
 
   <footer class="site-footer no-print border-t border-slate-200 bg-white mt-8">
@@ -1858,29 +1819,11 @@
         });
       }
 
-      function initAdSense() {
-        const cfg = window.SITE_CONFIG || {};
-        if (!cfg.adsenseClient) return;
-        const sc = document.createElement('script');
-        sc.async = true;
-        sc.crossOrigin = 'anonymous';
-        sc.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(cfg.adsenseClient);
-        document.head.appendChild(sc);
-        document.body.classList.add('ads-on');
-        document.querySelectorAll('ins.adsbygoogle').forEach(slot => {
-          const slotId = (cfg.slots || {})[slot.getAttribute('data-ad-key')];
-          if (!slotId) { const c = slot.closest('.ad-container'); if (c) c.style.display = 'none'; return; }
-          slot.setAttribute('data-ad-client', cfg.adsenseClient);
-          slot.setAttribute('data-ad-slot', slotId);
-          try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) {}
-        });
-      }
-
       // Initialize
       bindEvents();
       renderAll();
-      initAdSense();
     })();
   </script>
+  <script src="ads.js"></script>
 </body>
 </html>
